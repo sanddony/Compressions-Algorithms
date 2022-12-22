@@ -6,10 +6,14 @@
 #include <string.h>
 #include <getopt.h>
 
-
 #include "header.h"
 
 #define BYTE_MAX_SIZE 255
+
+
+//TO-DO: Decide where need single pointer, where double. Maybe we need allocate mem for mass and
+//then work with this pointers. 
+// 
 
 int main(int argc, char** argv) {
 
@@ -29,30 +33,47 @@ int main(int argc, char** argv) {
 
 int Encode(files files){
   int sym_count;
-  node** node_list = GetFrequencyOfBytes(files, &sym_count);
-  node* root = BuildTree(node_list, sym_count);
+  node** nodes_list = GetFrequencyOfBytes(files, &sym_count);
+  // PrintNodeList(nodes_list,sym_count);
+  node* root = BuildTree(nodes_list, sym_count);
 }
 
-node** SortRoots(node** node_list, int list_size){
-  node* tmp;
-  bool noSwap;
+//TO-DO don't alloc mem
+node* CopyNode(node input_node){
+  node* res = malloc(sizeof(node));
+  (*res).code = input_node.code;
+  (*res).is_root = input_node.is_root;
+  (*res).left_leaf = input_node.left_leaf;
+  (*res).right_leaf = input_node.right_leaf;
+  (*res).symb = input_node.symb;
+  (*res).weight = input_node.weight;
+  return res;
+}
+
+node* SortRoots(node* nodes_list, int list_size){
   // Handle NULL case: node can be NULL
-  for (int i = list_size - 1; i >= 0; i--) {
-        noSwap = 1;
-        for (int j = 0; j < i; j++)
+  // If symb == NULL, get to the end
+  // Sort by Weight
+  node tmp;
+  bool noSwap;
+  for (int i = list_size - 1; i >= 0; i--)
+  {
+    noSwap = 1;
+    for (int j = 0; j < i; j++)
+    {
+        if (nodes_list[j].weight > nodes_list[j+1].weight)
         {
-            if (node_list[j]->weight > node_list[j + 1]->weight)
-            {
-                tmp = node_list[j];
-                node_list[j] = node_list[j + 1];
-                node_list[j + 1] = tmp;
-                noSwap = 0;
-            }
+            tmp = nodes_list[j];
+            nodes_list[j] = nodes_list[j+1];
+            nodes_list[j+1] = tmp;
+            noSwap = 0;
         }
-        if (noSwap == 1)
-            break;
+    }
+    if (noSwap == 1)
+        break;
   }
-  return node_list;
+  
+  return nodes_list;
 }
 
 node** GetFrequencyOfBytes(files files, int* sym_count) {
@@ -78,7 +99,7 @@ node** GetFrequencyOfBytes(files files, int* sym_count) {
     fread(tmp, sizeof(byte), 1, files._in);
     for (int k = 0; k < BYTE_MAX_SIZE; k++)
     {
-      if(nodes_list[k]->symb==tmp[0]){
+      if(nodes_list[k]->symb==tmp[0]) {
         nodes_list[k]->weight++;
       }
     }
@@ -89,7 +110,7 @@ node** GetFrequencyOfBytes(files files, int* sym_count) {
   for (int i = 0; i < BYTE_MAX_SIZE; i++) {
     if(nodes_list[i]->weight!=0) {
       res_list_indx[(*sym_count)++] = i;
-    }
+      }
   }
 
   
@@ -113,45 +134,47 @@ node** GetFrequencyOfBytes(files files, int* sym_count) {
   return SortRoots(res_list, *sym_count);
 }
 
+// first should be less then second, cause it'll go to the left leaf 
 node* UniteTwoNodes(node* first, node* second){
   node* res = malloc(sizeof(node));
   res->left_leaf = first;
   first->is_root = 0;
+
   res->right_leaf = second;
   second->is_root = 0;
+
   res->weight = first->weight + second->weight;
   res->is_root = 1;
+
+  res->code = 0;
+  res->symb = '\\';
   return res;
 }
 
 node* BuildTree(node** nodes_list, int sym_count) {
-  node empty_node = {NULL, NULL, 0, 0, 0, 0};
+  node empty_node = {NULL, NULL, 0, 0, 0, 0x7FFFFFFF};
   // while root > 1 in list (or second element not a empty_node)
   // Take first two elements and build root with them in leafs
   // Switch first element on the new generated on before step, then 
-  // switch second element on the empty_node
-  int k = 0;
+  // switch second element on the empty_node  
   printf("size %d\n", sizeof(node));
-  printf("%p : \n",(*nodes_list));
-  printf("%p : \n",(*nodes_list)[1]);
-  printf("%p : \n",*(nodes_list));
-  printf("%p : \n",*(nodes_list)-1);
-  for (int i = 0; i < sym_count; i++) {
-      printf("%d : ",(*nodes_list)[i].weight);
-      printf("%p : ",(*nodes_list+ i));
-      printf("%p : ",&empty_node);
-      F((*nodes_list)[i].symb);
-      // printf("\n");
-      // *nodes_list+1 = &empty_node;
-      printf("\n");
-    }
-  // while ((*nodes_list + 1) != &empty_node)
-  // {
-  //   nodes_list[0] = UniteTwoNodes(nodes_list[0],nodes_list[1]);
-  //   nodes_list[1] = &empty_node;
-  //   SortRoots(nodes_list, sym_count);
-  //   if(nodes_list[0] == &empty_node) printf("\n%p %p\n",&empty_node, nodes_list[0]);  
+
+  PrintNodeList(nodes_list,sym_count);
+  printf("\n\n\n");
+  while(nodes_list[1]->is_root) {
+    nodes_list[0] = UniteTwoNodes(nodes_list[0],nodes_list[1]);
+    nodes_list[1] = &empty_node;
+    SortRoots(nodes_list, sym_count);
+    PrintNodeList(nodes_list,sym_count);
+    break;
   }
+
+  printf("\n\n\n");
+  PrintNode(nodes_list[0]);
+  PrintNode(nodes_list[1]);
+  PrintNode(nodes_list[2]);
+  // PrintNode(nodes_list[3]);
+}
 
 int SerializationOfTheTree(files files, node* root) {
 
@@ -216,11 +239,32 @@ int ParseParams(int argc, char** argv, files* files){
   // }
 
 
-void F(byte n)
-{
+void F(byte n) {
     for (int i = 0; i < 8; i++)
     {
         printf("%d", ((128 & n)>0));
         n<<=1;
     }
+    printf("\n");
+}
+
+
+void PrintNodeList(node** nodes_list, int sym_count) {
+  for (int i = 0; i < sym_count; i++)
+  {
+    PrintNode(nodes_list[i]);
+  }
+}
+
+void PrintNode(node* input_node) {
+    printf("\n=======================\n");
+    F((*input_node).symb);
+    printf("symb: (%c) | ", (*input_node).symb);
+    printf("code: (%c) | ", (*input_node).code);
+    printf("is_root: (%d) | ", (*input_node).is_root);
+    printf("weight: %d | ", (*input_node).weight);
+    printf("left_leaf address: %p | ", (*input_node).left_leaf);
+    printf("right_leaf address: %p | ", (*input_node).right_leaf);
+    printf("self address: %p | ",  input_node);
+    printf("\n=======================\n");
 }

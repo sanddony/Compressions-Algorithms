@@ -33,12 +33,13 @@ FILE *GetFile(char *path);
 
 // encode
 int Encode(files files);
-node** SortRoots(node** node_list, int list_size);
+node** SortRoots(node** nodes_list, int list_size);
 node** GetFrequencyOfBytes(files files, int* sym_count);
-node* BuildTree(node** nodes_list, int sym_count);
+node* BuildTree(node* nodes_list, int sym_count);
 int SerializationOfTheTree(files files, node* root);
 // node* BinarySearch(node* root, char byte);
 int WriteEncodeFile(files files, node* root);
+node* CopyNode(node input_node);
 //
 
 // decode
@@ -47,5 +48,7 @@ int WriteDecodeFile(files files, node* root);
 //
 
 void F(byte n);
+void PrintNodeList(node** nodes_list, int sym_count);
+void PrintNode(node* input_node);
 
 #endif //HUFFMAN_HEADER_H
