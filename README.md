@@ -1,2 +1,3 @@
-# Huffman-s-algorithm
-Huffman's algorithm realization in C
+# Realisations several algoritms in C
+Now ready only Huffmans algoritms
+
