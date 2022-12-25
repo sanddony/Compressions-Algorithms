@@ -3,7 +3,7 @@
 
 int main(int argc, char** argv) {
 
-    files files = {NULL, NULL, -1, -1};
+    files files = {NULL, NULL, -1, 2};
     
     int err_code = ParseParams(argc,argv,&files);
     if (!err_code) {
@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
             err_code = Huff(files);
             break;
         }
-    } else {
+    } else{
         Usage();
     }
     return err_code;
@@ -27,8 +27,7 @@ int ParseParams(int argc, char** argv, files* files){
            -1) {
         switch (flag) {
             case 'a':
-                ParseAlgorithm(optarg, &err_code);
-                (*files).algorithm = Huffmans;
+                (*files).algorithm = ParseAlgorithm(optarg, &err_code);;
                 break;
             case 'e':
                 (*files).mode = ENCODE;
@@ -39,20 +38,22 @@ int ParseParams(int argc, char** argv, files* files){
             case 'i':
                 (*files)._in = GetFile(optarg);
                 if(!(*files)._in){
-                    fprintf(stderr,"No files: %s\n",optarg);
-                    Usage();
+                    fprintf(stderr,"Can't open file with this name: %s\n",optarg);
                     err_code = 1;
                 }
                 break;
             case 'o':
                 (*files)._out = fopen(optarg,"wb+");
+                if(!(*files)._out){
+                    fprintf(stderr,"Can't write in file with this name: %s\n",optarg);
+                    err_code = 1;
+                }
                 break;
             default:
                 break;
         }
     }
-    if(!(*files)._in || !(*files)._out || (*files).mode==2){
-        Usage();
+    if((*files).mode==2){
         err_code = 1;
     }
     return err_code;
@@ -61,12 +62,12 @@ int ParseParams(int argc, char** argv, files* files){
 int ParseAlgorithm(char* alg_str, int * err_code){
     int res;
     if(strcmp(alg_str, "huff") == 0){
-        res = 1;
-       }
-       else{
+        res = 0;
+    }
+    else{
         fprintf(stderr,"No available algoritms with this name: %s\n",optarg);
         *err_code = 1;
-       }
+    }
     return res;
 }
 
@@ -82,5 +83,5 @@ FILE *GetFile(char *path) {
 
 //TO-DO modify to error handler (smth like strerror)
 void Usage(){
-    fprintf(stderr,"Usage: haffman [-a(algorithm) huff] [-e(encode)|-d(decode)] [-i(input) file_input] [-o(output) file_output]\n");
+    fprintf(stderr,"Usage: compress [-a(algorithm) huff] [-e(encode)|-d(decode)] [-i(input) file_input] [-o(output) file_output]\n");
 }

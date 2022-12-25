@@ -29,5 +29,6 @@ typedef struct files {
 int ParseParams(int argc, char** argv, files* files);
 int ParseAlgorithm(char* alg_str, int * err_code);
 FILE *GetFile(char *path);
+void Usage();
 
 #endif //COMPRESSIONS_ALGORITHMS_HEADER_H
