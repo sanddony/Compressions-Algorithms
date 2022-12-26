@@ -8,8 +8,10 @@
 
 //decode
 int Decode(files files);
-node* RestoreTree(files files);
-int WriteDecodeFile(files files, node* root);
+node** RestoreTree(files files, byte* count_nodes) ;
+int WriteDecodeFile(files files, node** node_list, byte count_nodes);
+node **SortNodes(node **nodes_list, int list_size);
+node* GetSymbByCode(byte code, node** node_list, byte count_nodes);
 //
 
 
