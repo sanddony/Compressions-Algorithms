@@ -33,6 +33,7 @@ void PrintNodeList(node** nodes_list, int sym_count) {
 }
 
 void PrintNode(node* input_node) {
+    if(input_node) {
     printf("\n=======================\n");
     F((*input_node).symb);
     printf("symb: (%c) | ", (*input_node).symb);
@@ -43,4 +44,26 @@ void PrintNode(node* input_node) {
     printf("right_leaf address: %p | ", (*input_node).right_leaf);
     printf("self address: %p | ",  input_node);
     printf("\n=======================\n");
+    } else printf("NULL pointer\n");
+}
+
+void TraverseAndPrintThree(node* in_node){
+  if(in_node){
+      if((*in_node).symb){
+        printf("symb: (%c) weight: %d\n",(*in_node).symb, (*in_node).weight);
+        printf("symb:");
+        F((*in_node).symb);
+        printf("code:");
+        F((*in_node).code);
+        for (int i = 0; i < 5+(8-(*in_node).code_len); i++) printf(" ");
+        for (int i = 0; i < (*in_node).code_len; i++) printf("^");
+        printf("\n");
+        printf("len of code: %d\n", (*in_node).code_len);
+        
+
+      }
+      TraverseAndPrintThree((*in_node).left_leaf);
+      TraverseAndPrintThree((*in_node).right_leaf);
+  }
+  
 }

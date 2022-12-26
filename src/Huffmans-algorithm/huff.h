@@ -19,11 +19,8 @@ struct node {
     node* right_leaf;
     int is_root;
     byte symb;
-    // union symbol{
-    //     byte symb;
-    //     void* nothing;
-    // };
-    char code;  
+    byte code;
+    byte code_len;  
     int weight;
 };
 
@@ -34,6 +31,7 @@ struct node {
 void F(byte n);
 void PrintNodeList(node** nodes_list, int sym_count);
 void PrintNode(node* input_node);
+void TraverseAndPrintThree(node* in_node);
 
 int Huff(files files);
 

@@ -5,9 +5,15 @@ int Encode(files files){
   int sym_count;
   node** nodes_list = GetFrequencyOfBytes(files, &sym_count);
   node* root = BuildTree(nodes_list, sym_count);
-  PrintNode(root);
-  Traverse(root);
-  // SetCodeForBytes(root);
+  PrintNode(root);  // debug
+  SetCodeForSymb(root, 0, -1, 0);
+  TraverseAndPrintThree(root); // debug
+  SerializationOfTheTree(files,root);
+  node* wanted = NULL;
+  byte l = 'g';
+  F(l);
+  GetSymbCode(root, &l, &wanted);
+  PrintNode(wanted);
 }
 
 node** SortRoots(node** nodes_list, int list_size){
@@ -91,7 +97,7 @@ node** GetFrequencyOfBytes(files files, int* sym_count) {
   return SortRoots(res_list, *sym_count);
 }
 
-// left should be less than right
+// left should be less or equal right
 node* UniteTwoNodes(node* left, node* right){
   node* res = malloc(sizeof(node));
   res->left_leaf = left;
@@ -109,7 +115,7 @@ node* UniteTwoNodes(node* left, node* right){
 }
 
 node* BuildTree(node** nodes_list, int sym_count) {
-  node empty_node = {NULL, NULL, 0, 0, 0, 0x7FFFFFFF};
+  node empty_node = {NULL, NULL, 0, 0, 0, 0, 0x7FFFFFFF};
   // while root > 1 in list (or second element not a empty_node)
   // Take first two elements and build root with them in leafs
   // Switch first element on the new generated on before step, then 
@@ -140,29 +146,80 @@ node* BuildTree(node** nodes_list, int sym_count) {
   return root;
 }
 
-void SetCodeForBytes(node* root){
-  int code = 00000000;
-
+void SetCodeForSymb(node* in_node, byte code, byte len, byte add_code){
+    if(in_node){
+      //TO-DO assert for len > 8
+      len+=1;
+      code <<= 1;
+      code |= add_code;
+      (*in_node).code = code;
+      (*in_node).code_len = len;
+      SetCodeForSymb((*in_node).left_leaf, code, len, 0);
+      SetCodeForSymb((*in_node).right_leaf, code, len, 1);
+  }
 }
 
-void Traverse(node* in_node){
-  if(in_node){
-      if((*in_node).symb){
-        F((*in_node).symb);
-        printf(" (%c) %d\n",(*in_node).symb, (*in_node).weight);
-      }
-      Traverse((*in_node).left_leaf);
-      Traverse((*in_node).right_leaf);
+void CountSymbInThree(node* in_node, byte *size){
+      if(in_node){
+      //TO-DO assert for len > 8
+      if(!(*in_node).left_leaf && !(*in_node).right_leaf)*size+=1;
+      CountSymbInThree((*in_node).left_leaf, size);
+      CountSymbInThree((*in_node).right_leaf, size);
   }
-  
+}
 
+void WriteNodeInFile(node* in_node, FILE* files_out){
+      if(in_node){
+      //TO-DO assert for len > 8
+      if(!(*in_node).left_leaf && !(*in_node).right_leaf) {
+        fwrite(&(*in_node).symb, sizeof(byte), 1, files_out);
+        fwrite(&(*in_node).code, sizeof(byte), 1, files_out);
+        fwrite(&(*in_node).code_len, sizeof(byte), 1, files_out);
+      }
+      WriteNodeInFile((*in_node).left_leaf, files_out);
+      WriteNodeInFile((*in_node).right_leaf, files_out);
+  }
 }
 
 int SerializationOfTheTree(files files, node* root) {
+  // count of the nodes 1 bytes
+  //
+  // code (1 byte)
+  // code_len (1 byte)
+  // symb (1 byte)
 
+  byte count = 0;
+  CountSymbInThree(root, &count);
+  printf("Total: %d\n",count); // debug
+  fwrite(&count, sizeof(byte), 1, files._out);
+  WriteNodeInFile(root, files._out);
+}
+
+void GetSymbCode(node* in_node, byte* symb, node** out_node){
+  if(in_node){
+      if((*in_node).symb == *symb) (*out_node) = in_node;
+      GetSymbCode((*in_node).left_leaf, symb, out_node);
+      GetSymbCode((*in_node).right_leaf, symb, out_node);
+  }
 }
 
 int WriteEncodeFile(files files, node* root) {
+  byte input_byte;
+  byte input_byte_code;
+  byte output_byte;
+  byte len_output_byte;
+  while (1)
+  {
+    len_output_byte = 8;
+    while (len_output_byte)
+    {
+      input_byte = fgetc(files._in);
 
+    }
+    
+    
+
+  }
+  
 }
 

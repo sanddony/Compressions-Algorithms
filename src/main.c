@@ -43,7 +43,7 @@ int ParseParams(int argc, char** argv, files* files){
                 }
                 break;
             case 'o':
-                (*files)._out = fopen(optarg,"wb+");
+                (*files)._out = fopen(optarg,"wb");
                 if(!(*files)._out){
                     fprintf(stderr,"Can't write in file with this name: %s\n",optarg);
                     err_code = 1;
@@ -76,7 +76,7 @@ FILE *GetFile(char *path) {
   if (!strcmp(path, "-")) {
     file = stdin;
   } else {
-    file = fopen(path, "rb+");
+    file = fopen(path, "rb");
   }
   return file;
 }
