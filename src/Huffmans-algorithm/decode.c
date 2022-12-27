@@ -23,46 +23,35 @@ node** RestoreTree(files files, byte* count_nodes) {
 }
 
 int WriteDecodeFile(files files, node** node_list, byte count_nodes) {
-    byte roller = fgetc(files._in);
-    byte in_byte;
-    byte shift = 0;
-    byte shift_prev = 0;
-    byte flag = 0;
-    node* node = NULL;
-    while (!feof(files._in))
-    {
 
-        if(shift>0 && !flag){
-            in_byte = fgetc(files._in);
-            printf("\nGet new byte!\n");  
-            shift%=8;  
-            flag = 1;
-        }
-        if(shift>8){
-            flag = 0;
-            shift%=8;
-        }
-        printf("shift: %d\n", shift);
-        printf("roller ");
-        F(roller);
-        
-        byte tmp = in_byte<<shift_prev;
-        if(node)tmp >>=(8-(node->code_len))+shift_prev;
-        else tmp >>=(8-shift)+shift_prev;
-        printf("tmp ");
-        F(tmp);
-        if(node)roller <<= (node->code_len);
-        else roller <<= shift;
-        roller|=tmp;
-        printf("roller ");
-        F(roller);
-        node = GetSymbByCode(roller, node_list, count_nodes);
-        PrintNode(node);
-        fwrite(&node->symb, sizeof(byte), 1, files._out);
-        shift_prev = shift;
-        shift += node->code_len;
+    byte buff = fgetc(files._in);
+    byte next_iter_buf = 0;
+    byte buff_len_inv = 0; //?
+    node* node_;
+    while(!feof(files._in)) {
+        printf("BUFF ");
+        F(buff);
+        do {
+            node_ = GetSymbByCode(buff,node_list,count_nodes);
+            PrintNode(node_);
+            fwrite(&node_->symb, sizeof(byte), 1, files._out);
+            if(node_){
+                buff_len_inv+=node_->code_len;
+                buff <<= node_->code_len;
+                // buff >>= buff_len_inv;
+            }
+            printf("BUFF ");
+            F(buff);
+            // if(buff_len_inv>20)break;
+        } while(node_ && buff_len_inv <= 8);
+        byte buff_len = 8-buff_len_inv;
+        buff<<=(8-buff_len);
+        byte tmp = fgetc(files._in);
+        next_iter_buf = tmp << (8-buff_len);
+        tmp >>= buff_len;
+        buff |= tmp;
+        // break;
     }
-    
 }
 
 //TO-DO union with another GetSymbCode
