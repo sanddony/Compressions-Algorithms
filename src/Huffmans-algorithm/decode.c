@@ -23,31 +23,44 @@ node** RestoreTree(files files, byte* count_nodes) {
 }
 
 int WriteDecodeFile(files files, node** node_list, byte count_nodes) {
-    byte shift = 0;
-    byte roller = 0;
-    byte roller_len = 8;
+    byte roller = fgetc(files._in);
     byte in_byte;
+    byte shift = 0;
+    byte shift_prev = 0;
+    byte flag = 0;
+    node* node = NULL;
     while (!feof(files._in))
     {
-        if(roller_len>=8){
-            in_byte = fgetc(files._in);
-            printf("in_byte ");
-            F(in_byte);
-            roller_len = 0;
-            shift = 8;
-        }
-        roller <<= shift;
-        printf("roller ");
-        F(roller);
-        roller |= (in_byte>>(8-shift));
-        printf("roller ");
-        F(roller);
 
-        node* node = GetSymbByCode(roller, node_list, count_nodes);
+        if(shift>0 && !flag){
+            in_byte = fgetc(files._in);
+            printf("\nGet new byte!\n");  
+            shift%=8;  
+            flag = 1;
+        }
+        if(shift>8){
+            flag = 0;
+            shift%=8;
+        }
+        printf("shift: %d\n", shift);
+        printf("roller ");
+        F(roller);
+        
+        byte tmp = in_byte<<shift_prev;
+        if(node)tmp >>=(8-(node->code_len))+shift_prev;
+        else tmp >>=(8-shift)+shift_prev;
+        printf("tmp ");
+        F(tmp);
+        if(node)roller <<= (node->code_len);
+        else roller <<= shift;
+        roller|=tmp;
+        printf("roller ");
+        F(roller);
+        node = GetSymbByCode(roller, node_list, count_nodes);
         PrintNode(node);
         fwrite(&node->symb, sizeof(byte), 1, files._out);
-        shift = node->code_len;
-        roller_len+=node->code_len;
+        shift_prev = shift;
+        shift += node->code_len;
     }
     
 }
@@ -59,10 +72,6 @@ node* GetSymbByCode(byte code, node** node_list, byte count_nodes) {
     {
         byte tmp = code;
         tmp >>= (8 - node_list[i]->code_len);
-        // PrintNode(node_list[i]);
-        // printf("tmp=");
-        // F(tmp);
-        // F((tmp & node_list[i]->code));
         if(tmp == node_list[i]->code) {
             res = node_list[i];
         }
