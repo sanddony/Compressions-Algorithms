@@ -3,6 +3,7 @@
 int Decode(files files) {
     byte count_nodes;
     node** nodes_list = RestoreTree(files, &count_nodes);
+    PrintNodeList(nodes_list,count_nodes);
     WriteDecodeFile(files, nodes_list, count_nodes);
 }
 
@@ -94,9 +95,10 @@ int WriteDecodeFile(files files, node** node_list, byte count_nodes) {
         fitted_bits = byte_from_file >> abs((8-sum_of_the_code_len)+not_fitted_bits_len);
         printf("fitted_bits: ");
         F(fitted_bits);
+        //abs - ?
         printf("shitf:%d\n",abs((8-sum_of_the_code_len)+not_fitted_bits_len));
         // 8-sum_of_the_code_len - длина оставшейся не декодированной части
-        not_fitted_bits >>= (8-sum_of_the_code_len);
+        not_fitted_bits <<= sum_of_the_code_len-not_fitted_bits_len;
         printf("not_fitted_bits: ");
         F(not_fitted_bits);
         printf("buff: ");
@@ -107,22 +109,33 @@ int WriteDecodeFile(files files, node** node_list, byte count_nodes) {
         buff |= fitted_bits;
         printf("buff: ");
         F(buff);
+        // Wrong shift
+        //Wrong not_fitted_bits
         not_fitted_bits = byte_from_file << sum_of_the_code_len;
         not_fitted_bits >>= sum_of_the_code_len;
         printf("not_fitted_bits: ");
         F(not_fitted_bits);
+        printf("sum_of_the_code_len: %d\n",sum_of_the_code_len);
+        not_fitted_bits_len = 8-sum_of_the_code_len;
         sum_of_the_code_len = 0;
-        not_fitted_bits_len = sum_of_the_code_len;
         while((right_byte_code = GetSymbByCode(buff, node_list, count_nodes)) &&
                 sum_of_the_code_len<=8){
             PrintNode(right_byte_code);
+            printf("buff in :");
             F(buff);
             printf("sum_of_the_code_len %d\n", sum_of_the_code_len);
-            fwrite(&right_byte_code->symb, sizeof(byte), 1, files._out);
-            buff <<= right_byte_code->code_len;
-            buff >>= right_byte_code->code_len;
             sum_of_the_code_len+=right_byte_code->code_len;
             printf("sum_of_the_code_len %d\n", sum_of_the_code_len);
+            if(sum_of_the_code_len<=8){
+                fwrite(&right_byte_code->symb, sizeof(byte), 1, files._out);
+                buff <<= right_byte_code->code_len;
+            }
+            if(sum_of_the_code_len>8){
+                sum_of_the_code_len-=right_byte_code->code_len;
+                break;
+            }
+            printf("buff out :");
+            F(buff);
         }
     }
     //

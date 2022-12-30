@@ -34,6 +34,7 @@ void PrintNodeList(node **nodes_list, int sym_count) {
 void PrintNode(node *input_node) {
   if (input_node) {
     printf("\n=======================\n");
+      printf("symb_bytes:");
     F((*input_node).symb);
     printf("symb: (%c) \n", (*input_node).symb);
     printf("code:");
