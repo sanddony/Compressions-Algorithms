@@ -20,7 +20,7 @@ all: huff.o
 	rm -rf *.o
 
 huff.o:
-	$(CC) -c $(HUFFMANS_DIR)/decode.c $(HUFFMANS_DIR)/encode.c $(HUFFMANS_DIR)/huff.c 
+	$(CC)  -c $(HUFFMANS_DIR)/decode.c $(HUFFMANS_DIR)/encode.c $(HUFFMANS_DIR)/huff.c
 
 clean:
 	rm -f *.o

@@ -11,6 +11,7 @@ int Huff(files files) {
   } else {
     err_code = Decode(files);
   }
+  return err_code;
 }
 
 void F(byte n) {

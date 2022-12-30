@@ -4,14 +4,19 @@
 int main(int argc, char** argv) {
 
     files files = {NULL, NULL, -1, 2};
-    
+
     int err_code = ParseParams(argc,argv,&files);
     if (!err_code) {
+        printf("%d\n",files.algorithm);
         switch (files.algorithm)
         {
-        case Huffmans:
-            err_code = Huff(files);
-            break;
+            case Huffmans:
+                printf("%d\n",files.mode);
+                err_code = Huff(files);
+                break;
+            default:
+                Usage();
+                break;
         }
     } else{
         Usage();
@@ -53,7 +58,7 @@ int ParseParams(int argc, char** argv, files* files){
                 break;
         }
     }
-    if((*files).mode==2){
+    if((*files).mode==2 || !(*files)._in || !(*files)._out){
         err_code = 1;
     }
     return err_code;
