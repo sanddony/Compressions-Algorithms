@@ -3,7 +3,7 @@
 int Decode(files files) {
     byte count_nodes;
     node** nodes_list = RestoreTree(files, &count_nodes);
-    PrintNodeList(nodes_list,count_nodes);
+//    PrintNodeList(nodes_list,count_nodes);
     WriteDecodeFile(files, nodes_list, count_nodes);
 }
 
@@ -53,6 +53,104 @@ node** RestoreTree(files files, byte* count_nodes) {
 //    }
 //}
 
+//int WriteDecodeFile(files files, node** node_list, byte count_nodes) {
+//    // Define size of the encoded bytes
+//    int current_pos = ftell(files._in);
+//    fseek(files._in, 0, SEEK_END);
+//    int end_file = ftell(files._in);
+//    fseek(files._in, current_pos, SEEK_SET);
+//    int encode_part_size = end_file - current_pos;
+//    //    // ________ | ________
+////    // |NEED TO HANDLE| 1. Last byte
+////    // =====================================================
+////    // 1. Get byte from file | sum_of_the_code_len = 8;
+////    // Get first sum_of_the_code_len bytes from received byte
+////    // 2. While get node move to the left and print symb (TRUE)
+////    //      2.1 Get node
+////    //      2.2 Write received symb to the file,
+////    //          if got the NULL: break
+////    //      2.3 Move to the left on the code_len and sum_of_the_code_len+=code_len
+////    // =====================================================
+////
+//// ______ __
+//// >>= 8-code_len; <<= 8-code_len
+//// >>= code_len; <<= code_len
+//    byte sum_of_the_code_len = 8;
+//    node* right_byte_code;
+//    byte not_fitted_bits = 0;
+//    byte fitted_bits;
+//    byte buff;
+//    byte byte_from_file = 0;
+//    byte not_fitted_bits_len = 0;
+//    for (int i = 0; i < encode_part_size; ++i) {
+//        byte byte_from_file = fgetc(files._in);
+//         // Handle situation, when checked not all of the byte
+//        printf("not_fitted_bits_len : %d\n",not_fitted_bits_len);
+//        printf("buff: ");
+//        F(buff);
+//        printf("byte_from_file: ");
+//        F(byte_from_file);
+//        fitted_bits = byte_from_file >> abs((8-sum_of_the_code_len)+not_fitted_bits_len);
+//        printf("fitted_bits: ");
+//        F(fitted_bits);
+//        //abs - ?
+//        printf(" abs shitf:%d\n",abs((8-sum_of_the_code_len)+not_fitted_bits_len));
+//        printf("shitf:%d\n",((8-sum_of_the_code_len)+not_fitted_bits_len));
+//        // 8-sum_of_the_code_len - длина оставшейся не декодированной части
+//        not_fitted_bits <<= sum_of_the_code_len-not_fitted_bits_len;
+//        printf("not_fitted_bits: ");
+//        F(not_fitted_bits);
+//        printf("buff: ");
+//        F(buff);
+//        buff |= not_fitted_bits;
+//        printf("buff: ");
+//        F(buff);
+//        buff |= fitted_bits;
+//        printf("buff: ");
+//        F(buff);
+//        // Wrong shift
+//        //Wrong not_fitted_bits
+//        not_fitted_bits = byte_from_file << ((8-sum_of_the_code_len)+not_fitted_bits_len);
+//        not_fitted_bits >>= ((8-sum_of_the_code_len)+not_fitted_bits_len);
+//        printf("not_fitted_bits: ");
+//        F(not_fitted_bits);
+//        not_fitted_bits_len = (8-sum_of_the_code_len)+not_fitted_bits_len;
+//        printf("not_fitted_bits_len: %d\n",not_fitted_bits_len);
+//        sum_of_the_code_len = 0;
+//        while((right_byte_code = GetSymbByCode(buff, node_list, count_nodes)) &&
+//                sum_of_the_code_len<=8){
+//            printf("\n-----------------------\n");
+//            printf("while start:\n");
+//            printf("buff in :");
+//            F(buff);
+//            sum_of_the_code_len+=right_byte_code->code_len;
+//            if(sum_of_the_code_len<=8){
+//                fwrite(&right_byte_code->symb, sizeof(byte), 1, files._out);
+//                buff <<= right_byte_code->code_len;
+//                printf("(%c) wrote in file\n",right_byte_code->symb);
+//            } else{
+//                printf("No symb match!\n");
+//            }
+//            printf("buff out :");
+//            F(buff);
+//
+//            if(sum_of_the_code_len>8){
+//                sum_of_the_code_len-=right_byte_code->code_len;
+//                printf("sum_of_the_code_len %d\n", sum_of_the_code_len);
+//                printf("while end\n");
+//                printf("\n\n-----------------------\n\n");
+//                break;
+//            }
+//            printf("sum_of_the_code_len %d\n", sum_of_the_code_len);
+//            printf("while end\n");
+//            printf("\n\n-----------------------\n\n");
+//
+//        }
+//    }
+//    //
+//}
+//
+
 int WriteDecodeFile(files files, node** node_list, byte count_nodes) {
     // Define size of the encoded bytes
     int current_pos = ftell(files._in);
@@ -60,8 +158,6 @@ int WriteDecodeFile(files files, node** node_list, byte count_nodes) {
     int end_file = ftell(files._in);
     fseek(files._in, current_pos, SEEK_SET);
     int encode_part_size = end_file - current_pos;
-    printf("%d\n",encode_part_size);
-    printf("%d\n",current_pos);
     //    // ________ | ________
 //    // |NEED TO HANDLE| 1. Last byte
 //    // =====================================================
@@ -77,69 +173,50 @@ int WriteDecodeFile(files files, node** node_list, byte count_nodes) {
 // ______ __
 // >>= 8-code_len; <<= 8-code_len
 // >>= code_len; <<= code_len
-    byte sum_of_the_code_len = 8;
     node* right_byte_code;
-    byte not_fitted_bits = 0;
-    byte fitted_bits;
-    byte buff;
+    code not_fitted_bits = {0,0};
+    code fitted_bits = {0,0};
+    code buff = {0,8};
     byte byte_from_file = 0;
     byte not_fitted_bits_len = 0;
     for (int i = 0; i < encode_part_size; ++i) {
         byte byte_from_file = fgetc(files._in);
-         // Handle situation, when checked not all of the byte
-        printf("not_fitted_bits_len : %d\n",not_fitted_bits_len);
-        printf("buff: ");
-        F(buff);
-        printf("byte_from_file: ");
-        F(byte_from_file);
-        fitted_bits = byte_from_file >> abs((8-sum_of_the_code_len)+not_fitted_bits_len);
-        printf("fitted_bits: ");
-        F(fitted_bits);
-        //abs - ?
-        printf("shitf:%d\n",abs((8-sum_of_the_code_len)+not_fitted_bits_len));
-        // 8-sum_of_the_code_len - длина оставшейся не декодированной части
-        not_fitted_bits <<= sum_of_the_code_len-not_fitted_bits_len;
-        printf("not_fitted_bits: ");
-        F(not_fitted_bits);
-        printf("buff: ");
-        F(buff);
-        buff |= not_fitted_bits;
-        printf("buff: ");
-        F(buff);
-        buff |= fitted_bits;
-        printf("buff: ");
-        F(buff);
-        // Wrong shift
-        //Wrong not_fitted_bits
-        not_fitted_bits = byte_from_file << sum_of_the_code_len;
-        not_fitted_bits >>= sum_of_the_code_len;
-        printf("not_fitted_bits: ");
-        F(not_fitted_bits);
-        printf("sum_of_the_code_len: %d\n",sum_of_the_code_len);
-        not_fitted_bits_len = 8-sum_of_the_code_len;
-        sum_of_the_code_len = 0;
-        while((right_byte_code = GetSymbByCode(buff, node_list, count_nodes)) &&
-                sum_of_the_code_len<=8){
-            PrintNode(right_byte_code);
-            printf("buff in :");
-            F(buff);
-            printf("sum_of_the_code_len %d\n", sum_of_the_code_len);
-            sum_of_the_code_len+=right_byte_code->code_len;
-            printf("sum_of_the_code_len %d\n", sum_of_the_code_len);
-            if(sum_of_the_code_len<=8){
+
+        fitted_bits.code = byte_from_file >> abs((8-buff.code_len)+not_fitted_bits.code_len);
+
+        not_fitted_bits.code <<= buff.code_len-not_fitted_bits.code_len;
+
+        buff.code |= not_fitted_bits.code;
+
+        buff.code |= fitted_bits.code;
+
+        not_fitted_bits.code = byte_from_file << ((8-buff.code_len)+not_fitted_bits.code_len);
+        not_fitted_bits.code >>= ((8-buff.code_len)+not_fitted_bits.code_len);
+
+        not_fitted_bits.code_len = (8-buff.code_len)+not_fitted_bits.code_len;
+
+        buff.code_len = 0;
+        while((right_byte_code = GetSymbByCode(buff.code, node_list, count_nodes)) &&
+              buff.code_len<=8){
+
+            buff.code_len+=right_byte_code->code_len;
+            if(buff.code_len<=8){
                 fwrite(&right_byte_code->symb, sizeof(byte), 1, files._out);
-                buff <<= right_byte_code->code_len;
+                buff.code <<= right_byte_code->code_len;
             }
-            if(sum_of_the_code_len>8){
-                sum_of_the_code_len-=right_byte_code->code_len;
+
+            if(buff.code_len>8){
+                buff.code_len-=right_byte_code->code_len;
                 break;
             }
-            printf("buff out :");
-            F(buff);
+
+
         }
     }
     //
 }
+
+
 
 //TO-DO union with another GetSymbCode
 

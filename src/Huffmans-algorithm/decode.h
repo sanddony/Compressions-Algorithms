@@ -6,6 +6,11 @@
 #include "huff.h"
 
 
+typedef struct code{
+    byte code;
+    byte code_len;
+}code;
+
 //decode
 int Decode(files files);
 node** RestoreTree(files files, byte* count_nodes) ;
