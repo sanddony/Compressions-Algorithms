@@ -20,11 +20,14 @@ struct node {
     int is_root;
     byte symb;
     byte code;
-    byte code_len;  
-    int weight;
+    int code_len;  
+    size_t weight;
 };
 
-
+typedef struct code{
+    byte code;
+    int code_len;
+}code;
 
 
 //Debugging functions
@@ -36,35 +39,3 @@ void TraverseAndPrintThree(node* in_node);
 int Huff(files files);
 
 #endif //HUFFMAN_HEADER_H
-
-/*int WriteDecodeFile(files files, node** node_list, byte count_nodes) {
-    byte shift = 0;
-    byte roller = 0;
-    byte roller_len = 8;
-    byte in_byte;
-    while (!feof(files._in))
-    {
-        if(roller_len<=8 && roller_len>0){
-            in_byte = fgetc(files._in);
-            printf("in_byte ");
-            F(in_byte);
-            roller_len = 0;
-            shift = 1;
-        }
-        printf("roller ");
-        F(roller);
-        roller <<= shift;
-        printf("roller ");
-        F(roller);
-        roller |= (in_byte>>(8-shift));
-        printf("roller ");
-        F(roller);
-
-        node* node = GetSymbByCode(roller, node_list, count_nodes);
-        PrintNode(node);
-        fwrite(&node->symb, sizeof(byte), 1, files._out);
-        shift = node->code_len;
-        roller_len+=node->code_len;
-    }
-    
-}*/

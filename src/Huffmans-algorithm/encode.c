@@ -4,10 +4,11 @@
 int Encode(files files) {
   int sym_count;
   node **nodes_list = GetFrequencyOfBytes(files, &sym_count);
+  PrintNodeList(nodes_list, sym_count);
   node *root = BuildTree(nodes_list, sym_count);
-  // PrintNode(root);  // debug
+  PrintNode(root); // debug
   SetCodeForSymb(root, 0, -1, 0);
-  TraverseAndPrintThree(root); // debug
+  // TraverseAndPrintThree(root); // debug
   SerializationOfTheTree(files, root);
   // node* wanted = NULL;
   // byte l = 'a';
@@ -117,9 +118,6 @@ node *BuildTree(node **nodes_list, int sym_count) {
   // Switch first element on the new generated on before step, then
   // switch second element on the empty_node
 
-  // printf("originaly\n");
-  // PrintNodeList(nodes_list,sym_count);
-  // printf("\n\n\n");
   while (nodes_list[1]->is_root) {
     // printf("Unite and insert\n");
     nodes_list[0] = UniteTwoNodes(nodes_list[0], nodes_list[1]);
@@ -144,7 +142,6 @@ node *BuildTree(node **nodes_list, int sym_count) {
 
 void SetCodeForSymb(node *in_node, byte code, byte len, byte add_code) {
   if (in_node) {
-    // TO-DO assert for len > 8
     len += 1;
     code <<= 1;
     code |= add_code;
@@ -167,7 +164,6 @@ void CountSymbInThree(node *in_node, byte *size) {
 
 void WriteNodeInFile(node *in_node, FILE *files_out) {
   if (in_node) {
-    // TO-DO assert for len > 8
     if (!(*in_node).left_leaf && !(*in_node).right_leaf) {
       fwrite(&(*in_node).symb, sizeof(byte), 1, files_out);
       fwrite(&(*in_node).code, sizeof(byte), 1, files_out);
@@ -187,7 +183,8 @@ int SerializationOfTheTree(files files, node *root) {
 
   byte count = 0;
   CountSymbInThree(root, &count);
-  printf("%d\n",count);
+  printf("%d\n", count);
+  fwrite(&root->weight, sizeof(size_t), 1, files._out);
   fwrite(&count, sizeof(byte), 1, files._out);
   WriteNodeInFile(root, files._out);
 }
@@ -207,86 +204,109 @@ int WriteEncodeFile(files files, node *root) {
   byte len_output_byte = 8;
   byte input_byte;
   fseek(files._in, 0, SEEK_SET);
-  do {
-    //TO-DO Handle situation when byte 0b111111111(EOF), but it symb
-    while (!feof(files._in) && len_output_byte > 0) {
-      input_byte = fgetc(files._in);
-      GetSymbCode(root, &input_byte, &desired);
-      if (!desired) {
-        fprintf(stderr,
-                "Erorr: Code for symb not found, three built incorrectly!");
-        exit(1);
-      }
-      // PrintNode(desired);
-      if (len_output_byte >= (*desired).code_len) {
-        // printf("\nfirst case\n");
-        len_output_byte -= (*desired).code_len;
-        // printf("len_output_byte: %d \n", len_output_byte);
-        // printf("Write output_byte\n");
-        // printf("Shift on %d: ",(*desired).code_len);
-        output_byte <<= (*desired).code_len;
-        // F(output_byte);
-        // printf("Adding : ");
-        // F((*desired).code);
-        output_byte |= (*desired).code;
-        // printf("Added : ");
-        // F(output_byte);
-        if (len_output_byte == 0) {
-          fwrite(&output_byte, sizeof(byte), 1, files._out);
-          // printf("output_byte wrote!\n\n");
-          output_byte = 0;
-          len_output_byte = 8;
-        }
-      } else {
-        // printf("\nsecond case\n");
-        // printf("len_output_byte: %d \n", len_output_byte);
-        // printf("Write output_byte\n");
-        // printf("Shift on %d: ",len_output_byte);
-
-        output_byte <<= len_output_byte;
-
-        // F(output_byte);
-        
-        byte tmp = (*desired).code >> (*desired).code_len - len_output_byte;
-
-        // printf("Adding: ");
-        // F(tmp);
-        output_byte |= tmp;
-
-        // printf("Added: ");
-        // F(output_byte);
-
-
-        fwrite(&output_byte, sizeof(byte), 1, files._out);
-        
-        // printf("output_byte wrote!\n\n");
-
-//======================
-        // printf("len_output_byte: %d \n", len_output_byte);
-
-        len_output_byte = (*desired).code_len - len_output_byte;
-        output_byte = 0;
-        tmp = (*desired).code << (8 - len_output_byte);
-        tmp >>= 8 - len_output_byte;
-
-        // printf("Write output_byte\n");
-        // printf("Adding : ");
-        // F(tmp); 
-
-        output_byte |= tmp;
-
-        // printf("Added : ");
-        // F(output_byte);
-
-        len_output_byte = 8-len_output_byte;
-      }
+  while (!feof(files._in) && len_output_byte > 0) {
+    input_byte = fgetc(files._in);
+    GetSymbCode(root, &input_byte, &desired);
+    if (!desired) {
+      fprintf(stderr,
+              "Erorr: Code for symb not found, three built incorrectly!");
+      exit(1);
     }
-    // exit(0);
-  } while (!feof(files._in));
-  // printf("len_output_byte: %d \n", len_output_byte);
-  if(len_output_byte != 0){
+    PrintNode(desired);
+    if (len_output_byte >= (*desired).code_len) {
+      printf("\nfirst case\n");
+      len_output_byte -= (*desired).code_len;
+      printf("len_output_byte: %d \n", len_output_byte);
+      printf("Write output_byte\n");
+      printf("Shift on %d: ", (*desired).code_len);
+      output_byte <<= (*desired).code_len;
+      F(output_byte);
+      printf("Adding : ");
+      F((*desired).code);
+      output_byte |= (*desired).code;
+      printf("Added : ");
+      F(output_byte);
+      if (len_output_byte == 0) {
+        fwrite(&output_byte, sizeof(byte), 1, files._out);
+        printf("output_byte wrote!\n\n");
+        output_byte = 0;
+        len_output_byte = 8;
+      }
+    } else {
+      printf("\nsecond case\n");
+      printf("len_output_byte: %d \n", len_output_byte);
+      printf("Write output_byte\n");
+      printf("Shift on %d: ", len_output_byte);
+      output_byte <<= len_output_byte;
+      F(output_byte);
+      byte tmp = (*desired).code >> (*desired).code_len - len_output_byte;
+      printf("Adding: ");
+      F(tmp);
+      output_byte |= tmp;
+      printf("Added: ");
+      F(output_byte);
+      fwrite(&output_byte, sizeof(byte), 1, files._out);
+      printf("output_byte wrote!\n\n");
+      //======================
+      printf("len_output_byte: %d \n", len_output_byte);
+      len_output_byte = (*desired).code_len - len_output_byte;
+      output_byte = 0;
+      tmp = (*desired).code << (8 - len_output_byte);
+      tmp >>= 8 - len_output_byte;
+      printf("Write output_byte\n");
+      printf("Adding : ");
+      F(tmp);
+      output_byte |= tmp;
+      printf("Added : ");
+      F(output_byte);
+      len_output_byte = 8 - len_output_byte;
+    }
+  }
+  printf("len_output_byte: %d \n", len_output_byte);
+  if (len_output_byte != 0) {
     output_byte <<= len_output_byte;
     fwrite(&output_byte, sizeof(byte), 1, files._out);
-    // printf("output_byte wrote!\n\n");
+    printf("output_byte wrote!\n\n");
   }
 }
+
+// int WriteEncodeFile(files files, node *root) {
+//   fseek(files._in, 0, SEEK_SET);
+//   node *desired = NULL;
+//   code output_byte = {0,0};
+//   code buff = {0,0};
+//   while (!feof(files._in)) {
+
+//     // if (!desired) {
+//     //   fprintf(stderr,
+//     //           "Erorr: Code for symb not found, three built incorrectly!");
+//     //   exit(1);
+//     // }
+//     output_byte = buff;
+//     while (output_byte.code_len != 8)
+//     {
+//       byte input_byte = fgetc(files._in);
+//       if(feof(files._in)) exit(1); //
+
+//       GetSymbCode(root, &input_byte, &desired);
+//       buff.code = desired->code;
+//       buff.code_len = desired->code_len;
+//       if(output_byte.code_len + buff.code_len <= 8) {
+//         buff.code <<= (8 - output_byte.code_len - buff.code_len);
+//         output_byte.code_len += buff.code_len;
+//       } else {
+//         code not_fitted_bits = {0,0};
+//         not_fitted_bits.code_len = output_byte.code_len + buff.code_len - 8;
+//         not_fitted_bits.code = buff.code << (8-not_fitted_bits.code_len);
+//         buff.code <<= (8-output_byte.code_len);
+//         buff.code >>= (8-output_byte.code_len);
+//         output_byte.code_len += (8-output_byte.code_len);
+//       }
+//       output_byte.code |= buff.code;
+//     }
+//     if(!feof(files._in)){
+//       fwrite(&output_byte, sizeof(byte), 1, files._out);
+//       output_byte.code_len = 0;
+//     }
+//   }
+// }
