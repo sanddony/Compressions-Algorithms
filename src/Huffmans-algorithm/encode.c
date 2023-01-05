@@ -6,9 +6,9 @@ int Encode(files files) {
   node **nodes_list = GetFrequencyOfBytes(files, &sym_count);
   PrintNodeList(nodes_list, sym_count);
   node *root = BuildTree(nodes_list, sym_count);
-  PrintNode(root); // debug
+  // PrintNode(root); // debug
   SetCodeForSymb(root, 0, -1, 0);
-  // TraverseAndPrintThree(root); // debug
+  TraverseAndPrintThree(root); // debug
   SerializationOfTheTree(files, root);
   // node* wanted = NULL;
   // byte l = 'a';
@@ -276,7 +276,6 @@ int WriteEncodeFile(files files, node *root) {
 //   code output_byte = {0,0};
 //   code buff = {0,0};
 //   while (!feof(files._in)) {
-
 //     // if (!desired) {
 //     //   fprintf(stderr,
 //     //           "Erorr: Code for symb not found, three built incorrectly!");
@@ -287,7 +286,6 @@ int WriteEncodeFile(files files, node *root) {
 //     {
 //       byte input_byte = fgetc(files._in);
 //       if(feof(files._in)) exit(1); //
-
 //       GetSymbCode(root, &input_byte, &desired);
 //       buff.code = desired->code;
 //       buff.code_len = desired->code_len;
@@ -305,7 +303,9 @@ int WriteEncodeFile(files files, node *root) {
 //       output_byte.code |= buff.code;
 //     }
 //     if(!feof(files._in)){
+//       // PrintNode(desired);
 //       fwrite(&output_byte, sizeof(byte), 1, files._out);
+//       // printf("||||||||||||||||||||||||");
 //       output_byte.code_len = 0;
 //     }
 //   }
