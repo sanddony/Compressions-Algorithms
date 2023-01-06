@@ -12,6 +12,7 @@
 
 #define byte unsigned char
 #define BYTE_MAX_SIZE 255
+#define PRINT_MIDDLE 1
 
 typedef struct node node;
 struct node {
@@ -36,7 +37,8 @@ void F_32(size_t n);
 
 void PrintNodeList(node** nodes_list, int sym_count);
 void PrintNode(node* input_node);
-void TraverseAndPrintThree(node* in_node);
+void TraverseAndPrintThree(node *in_node, int x, int y, int* x_cur, int* y_cur);
+void TraverseAndPrintThreeWrapper(node* root, int init_x, int init_y);
 
 int Huff(files files);
 
