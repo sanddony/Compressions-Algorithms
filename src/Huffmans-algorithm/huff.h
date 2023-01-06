@@ -12,6 +12,9 @@
 
 #define byte unsigned char
 #define BYTE_MAX_SIZE 255
+#define MIDDLE 64
+#define tc_move_cursor(X, Y) printf("\033[%d;%dH", Y, X);
+
 
 typedef struct node node;
 struct node {
@@ -36,7 +39,7 @@ void F_32(size_t n);
 
 void PrintNodeList(node** nodes_list, int sym_count);
 void PrintNode(node* input_node);
-void TraverseAndPrintThree(node* in_node);
+void TraverseAndPrintThree(node *in_node, int x, int y);
 
 int Huff(files files);
 

@@ -4,12 +4,12 @@
 int Encode(files files) {
   int sym_count;
   node **nodes_list = GetFrequencyOfBytes(files, &sym_count);
-  PrintNodeList(nodes_list, sym_count);
+  // PrintNodeList(nodes_list, sym_count);
   node *root = BuildTree(nodes_list, sym_count);
   // PrintNode(root); // debug
   SetCodeForSymb(root, 0, -1, 0);
-  TraverseAndPrintThree(root); // debug
-  SerializationOfTheTree(files, root);
+  // TraverseAndPrintThree(root, MIDDLE, 10); // debug
+  // SerializationOfTheTree(files, root);
   // node* wanted = NULL;
   // byte l = 'a';
   // F(l);

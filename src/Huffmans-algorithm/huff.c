@@ -1,8 +1,7 @@
 #include "huff.h"
 #include "decode.h"
 #include "encode.h"
-// TO-DO: Decide where need single pointer, where double. Maybe we need allocate
-// mem for mass and then work with this pointers.
+
 
 int Huff(files files) {
   int err_code = 0;
@@ -63,22 +62,27 @@ void PrintNode(node *input_node) {
     printf("NULL pointer\n ");
 }
 
-void TraverseAndPrintThree(node *in_node) {
+void TraverseAndPrintThree(node *in_node, int x, int y) {
   if (in_node) {
-    if ((*in_node).symb) {
-      printf("symb: (%c) weight: %d\n", (*in_node).symb, (*in_node).weight);
-      printf("symb:");
-      F((*in_node).symb);
-      printf("code:");
-      F((*in_node).code);
-      for (int i = 0; i < 5 + (8 - (*in_node).code_len); i++)
-        printf(" ");
-      for (int i = 0; i < (*in_node).code_len; i++)
-        printf("^");
-      printf("\n");
-      printf("len of code: %d\n", (*in_node).code_len);
+    tc_move_cursor(x,y);
+    if((*in_node).symb == '\n') printf("(\\n)");
+    else if((*in_node).symb)printf("(%c)", (*in_node).symb);
+    else printf("(%d)",(*in_node).weight);
+    if((*in_node).left_leaf){
+      // tc_move_cursor(x - 1,y + 1);
+      // printf("/");
+      tc_move_cursor(x,y);
+      TraverseAndPrintThree((*in_node).left_leaf, MIDDLE - x / 2,y+2);
+
     }
-    TraverseAndPrintThree((*in_node).left_leaf);
-    TraverseAndPrintThree((*in_node).right_leaf);
+    if((*in_node).right_leaf){
+      // tc_move_cursor(x + 1, y + 1);
+      // printf("\\");
+      tc_move_cursor(x,y);
+      TraverseAndPrintThree((*in_node).right_leaf,MIDDLE + x / 2,y+2);
+    }
+
+
+
   }
 }

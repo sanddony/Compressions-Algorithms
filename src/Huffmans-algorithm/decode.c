@@ -5,7 +5,6 @@ int Decode(files files) {
   size_t count_bytes; // TO-DO Handle equal zero case(instant exit, file empty)
   node **nodes_list = RestoreTree(files, &count_nodes, &count_bytes);
   PrintNodeList(nodes_list, count_nodes);
-  exit(1);
   WriteDecodeFile(files, nodes_list, count_nodes, &count_bytes);
 }
 
