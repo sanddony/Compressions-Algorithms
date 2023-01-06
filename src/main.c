@@ -7,11 +7,9 @@ int main(int argc, char** argv) {
 
     int err_code = ParseParams(argc,argv,&files);
     if (!err_code) {
-        printf("%d\n",files.algorithm);
         switch (files.algorithm)
         {
             case Huffmans:
-                printf("%d\n",files.mode);
                 err_code = Huff(files);
                 break;
             default:
