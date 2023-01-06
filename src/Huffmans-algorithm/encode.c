@@ -175,12 +175,11 @@ void WriteNodeInFile(node *in_node, FILE *files_out) {
 }
 
 int SerializationOfTheTree(files files, node *root) {
-  // count of the nodes 1 bytes
-  //
+  // count of total symb (8 bytes)
+  // count of the nodes (1 bytes)
   // code (1 byte)
   // code_len (1 byte)
   // symb (1 byte)
-
   byte count = 0;
   CountSymbInThree(root, &count);
   printf("%d\n", count);

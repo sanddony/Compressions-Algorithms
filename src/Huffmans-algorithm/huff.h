@@ -32,6 +32,8 @@ typedef struct code{
 
 //Debugging functions
 void F(byte n);
+void F_32(size_t n);
+
 void PrintNodeList(node** nodes_list, int sym_count);
 void PrintNode(node* input_node);
 void TraverseAndPrintThree(node* in_node);

@@ -22,6 +22,15 @@ void F(byte n) {
   printf("\n");
 }
 
+
+void F_32(size_t n)  {
+  for (int i = 0; i < 64; i++) {
+    printf("%d", ((0x8000000000000000 & n) > 0));
+    n <<= 1;
+  }
+  printf("\n");
+}
+
 void PrintNodeList(node **nodes_list, int sym_count) {
   for (int i = 0; i < sym_count; i++) {
     if (nodes_list[i])
