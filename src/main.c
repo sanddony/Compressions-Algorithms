@@ -3,9 +3,9 @@
 
 int main(int argc, char** argv) {
 
-    files files = {NULL, NULL, -1, 2};
+    files files = {NULL, NULL, -1, 2, 0};
 
-    int err_code = ParseParams(argc,argv,&files);
+    int err_code = ParseParams(argc, argv, &files);
     if (!err_code) {
         switch (files.algorithm)
         {
@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 int ParseParams(int argc, char** argv, files* files){
     int err_code = 0;
     int flag;
-    while ((flag = getopt_long(argc, argv, "a:edo:i:", long_options, NULL)) !=
+    while ((flag = getopt_long(argc, argv, "a:edo:i:v", long_options, NULL)) !=
            -1) {
         switch (flag) {
             case 'a':
@@ -52,6 +52,9 @@ int ParseParams(int argc, char** argv, files* files){
                     err_code = 1;
                 }
                 break;
+            case 'v':
+                (*files).visualization = 1;
+                break;
             default:
                 break;
         }
@@ -63,8 +66,8 @@ int ParseParams(int argc, char** argv, files* files){
 }
 
 int ParseAlgorithm(char* alg_str, int * err_code){
-    int res;
-    if(strcmp(alg_str, "huff") == 0){
+    int res = -1;
+    if(!strcmp(alg_str, "huff")){
         res = 0;
     }
     else{

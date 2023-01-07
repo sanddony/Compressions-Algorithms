@@ -16,7 +16,7 @@ BUILD_DIR = ../build/
 
 
 all: huff.o
-	$(CC) huff.o decode.o encode.o main.c -o $(BUILD_DIR)/compress
+	$(CC) huff.o decode.o encode.o main.c -o $(BUILD_DIR)/compress -lncurses
 	rm -rf *.o
 
 huff.o:

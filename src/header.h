@@ -11,6 +11,7 @@ static struct option long_options[] = {{"algorithm", required_argument, NULL, 'a
                                        {"decode", no_argument, NULL, 'd'},
                                        {"output", required_argument, NULL, 'o'},
                                        {"input", required_argument, NULL, 'i'},
+                                       {"visualization", no_argument, NULL, 'v'},
                                        {NULL, 0, NULL, 0}};
 
 enum Modes{ENCODE,DECODE};
@@ -23,6 +24,7 @@ typedef struct files {
 
    int algorithm;
    int mode;
+   int visualization;
 }files;
 
 
