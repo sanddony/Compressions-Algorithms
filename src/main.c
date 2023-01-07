@@ -3,9 +3,9 @@
 
 int main(int argc, char** argv) {
 
-    files files = {NULL, NULL, -1, 2};
+    files files = {NULL, NULL, -1, 2, 0};
 
-    int err_code = ParseParams(argc,argv,&files);
+    int err_code = ParseParams(argc, argv, &files);
     if (!err_code) {
         switch (files.algorithm)
         {
@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 int ParseParams(int argc, char** argv, files* files){
     int err_code = 0;
     int flag;
-    while ((flag = getopt_long(argc, argv, "a:edo:i:", long_options, NULL)) !=
+    while ((flag = getopt_long(argc, argv, "a:edo:i:v", long_options, NULL)) !=
            -1) {
         switch (flag) {
             case 'a':
@@ -51,6 +51,9 @@ int ParseParams(int argc, char** argv, files* files){
                     fprintf(stderr,"Can't write in file with this name: %s\n",optarg);
                     err_code = 1;
                 }
+                break;
+            case 'v':
+                (*files).visualization = 1;
                 break;
             default:
                 break;

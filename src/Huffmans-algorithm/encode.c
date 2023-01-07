@@ -5,9 +5,9 @@ int Encode(files files) {
   int sym_count;
   node **nodes_list = GetFrequencyOfBytes(files, &sym_count);
   node *root = BuildTree(nodes_list, sym_count);
-  TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0); // debug
+  if(files.visualization) TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0);
   SetCodeForSymb(root, 0, -1, 0);
-  TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0); // debug
+  if(files.visualization) TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0);
   SerializationOfTheTree(files, root);
   WriteEncodeFile(files, root);
 }
@@ -41,6 +41,11 @@ node **GetFrequencyOfBytes(files files, int *sym_count) {
   int file_size = ftell(files._in);
   fseek(files._in, 0, SEEK_SET);
   //
+
+  if(file_size == 0){
+    sprintf(stderr, "Empty file!\n");
+    exit(0);
+  }
 
   // Allocate mem for mass, which contain 255 elements. Exactly that much,
   // because program encode bytes and BYTE_MAX_SIZE=255 (0x11111111)-uc
@@ -167,7 +172,6 @@ int SerializationOfTheTree(files files, node *root) {
   // symb (1 byte)
   byte count = 0;
   CountSymbInThree(root, &count);
-  printf("%d\n", count);
   fwrite(&root->weight, sizeof(size_t), 1, files._out);
   fwrite(&count, sizeof(byte), 1, files._out);
   WriteNodeInFile(root, files._out);
@@ -196,101 +200,38 @@ int WriteEncodeFile(files files, node *root) {
               "Erorr: Code for symb not found, three built incorrectly!");
       exit(1);
     }
-    PrintNode(desired);
     if (len_output_byte >= (*desired).code_len) {
-      printf("\nfirst case\n");
       len_output_byte -= (*desired).code_len;
-      printf("len_output_byte: %d \n", len_output_byte);
-      printf("Write output_byte\n");
-      printf("Shift on %d: ", (*desired).code_len);
+
       output_byte <<= (*desired).code_len;
-      F(output_byte);
-      printf("Adding : ");
-      F((*desired).code);
+
       output_byte |= (*desired).code;
-      printf("Added : ");
-      F(output_byte);
+
       if (len_output_byte == 0) {
         fwrite(&output_byte, sizeof(byte), 1, files._out);
-        printf("output_byte wrote!\n\n");
         output_byte = 0;
         len_output_byte = 8;
       }
     } else {
-      printf("\nsecond case\n");
-      printf("len_output_byte: %d \n", len_output_byte);
-      printf("Write output_byte\n");
-      printf("Shift on %d: ", len_output_byte);
       output_byte <<= len_output_byte;
-      F(output_byte);
       byte tmp = (*desired).code >> (*desired).code_len - len_output_byte;
-      printf("Adding: ");
-      F(tmp);
+
       output_byte |= tmp;
-      printf("Added: ");
-      F(output_byte);
+
       fwrite(&output_byte, sizeof(byte), 1, files._out);
-      printf("output_byte wrote!\n\n");
       //======================
-      printf("len_output_byte: %d \n", len_output_byte);
       len_output_byte = (*desired).code_len - len_output_byte;
       output_byte = 0;
       tmp = (*desired).code << (8 - len_output_byte);
       tmp >>= 8 - len_output_byte;
-      printf("Write output_byte\n");
-      printf("Adding : ");
-      F(tmp);
+
       output_byte |= tmp;
-      printf("Added : ");
-      F(output_byte);
+
       len_output_byte = 8 - len_output_byte;
     }
   }
-  printf("len_output_byte: %d \n", len_output_byte);
   if (len_output_byte != 0) {
     output_byte <<= len_output_byte;
     fwrite(&output_byte, sizeof(byte), 1, files._out);
-    printf("output_byte wrote!\n\n");
   }
 }
-
-// int WriteEncodeFile(files files, node *root) {
-//   fseek(files._in, 0, SEEK_SET);
-//   node *desired = NULL;
-//   code output_byte = {0,0};
-//   code buff = {0,0};
-//   while (!feof(files._in)) {
-//     // if (!desired) {
-//     //   fprintf(stderr,
-//     //           "Erorr: Code for symb not found, three built incorrectly!");
-//     //   exit(1);
-//     // }
-//     output_byte = buff;
-//     while (output_byte.code_len != 8)
-//     {
-//       byte input_byte = fgetc(files._in);
-//       if(feof(files._in)) exit(1); //
-//       GetSymbCode(root, &input_byte, &desired);
-//       buff.code = desired->code;
-//       buff.code_len = desired->code_len;
-//       if(output_byte.code_len + buff.code_len <= 8) {
-//         buff.code <<= (8 - output_byte.code_len - buff.code_len);
-//         output_byte.code_len += buff.code_len;
-//       } else {
-//         code not_fitted_bits = {0,0};
-//         not_fitted_bits.code_len = output_byte.code_len + buff.code_len - 8;
-//         not_fitted_bits.code = buff.code << (8-not_fitted_bits.code_len);
-//         buff.code <<= (8-output_byte.code_len);
-//         buff.code >>= (8-output_byte.code_len);
-//         output_byte.code_len += (8-output_byte.code_len);
-//       }
-//       output_byte.code |= buff.code;
-//     }
-//     if(!feof(files._in)){
-//       // PrintNode(desired);
-//       fwrite(&output_byte, sizeof(byte), 1, files._out);
-//       // printf("||||||||||||||||||||||||");
-//       output_byte.code_len = 0;
-//     }
-//   }
-// }

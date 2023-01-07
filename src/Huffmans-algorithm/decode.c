@@ -2,9 +2,12 @@
 
 int Decode(files files) {
   byte count_nodes;
-  size_t count_bytes; // TO-DO Handle equal zero case(instant exit, file empty)
+  size_t count_bytes = 0; 
   node **nodes_list = RestoreTree(files, &count_nodes, &count_bytes);
-  PrintNodeList(nodes_list, count_nodes);
+  if(count_bytes == 0){
+    sprintf(stderr, "Empty file!\n");
+    exit(0);
+  }
   WriteDecodeFile(files, nodes_list, count_nodes, &count_bytes);
 }
 
@@ -70,10 +73,6 @@ int WriteDecodeFile(files files, node **node_list, byte count_nodes, size_t* cou
   int encode_part_size = end_file - current_pos;
   //  of the encoded bytes
 
-  printf("count_nodes: %d\n",count_nodes);
-  printf("count_bytes: %d\n",(*count_bytes));
-  printf("encode_part_size: %d\n",encode_part_size);
-
   node *symb_code = NULL;
   code not_fitted_bits = {0, 0};
   code fitted_bits = {0, 0};
@@ -136,20 +135,48 @@ int WriteDecodeFile(files files, node **node_list, byte count_nodes, size_t* cou
       if (buff.code_len >= 0 && *count_bytes > 0){
         fwrite(&symb_code->symb, sizeof(byte), 1, files._out);
         (*count_bytes)--;
-        printf("count_bytes: %d\n",(*count_bytes));
-        printf("i: %d\n",i);
-
       }
-
-      DebugWriteDecodeFile(byte_from_file, not_fitted_bits, fitted_bits, buff,
-                           symb_code);
 
     }
     buff.code_len = buff.code_len < 0 ? 0 : buff.code_len;
   }
 }
 
+node *GetSymbByCode(code buff, node **node_list, byte count_nodes) {
+  node *res = NULL;
+  if (buff.code_len <= 0)
+    return NULL;
+  for (int i = 0; i < count_nodes; i++) {
+    byte tmp = buff.code;
+    tmp >>= (8 - node_list[i]->code_len);
+    if (tmp == node_list[i]->code && buff.code_len >= node_list[i]->code_len) {
+      res = node_list[i];
+    }
+  }
+  return res;
+}
 
+node **SortNodes(node **nodes_list, int list_size) {
+  node *tmp;
+  bool noSwap;
+  for (int i = list_size - 1; i >= 0; i--) {
+    noSwap = 1;
+    for (int j = 0; j < i; j++) {
+      if (nodes_list[j]->code_len > nodes_list[j + 1]->code_len) {
+        tmp = nodes_list[j];
+        nodes_list[j] = nodes_list[j + 1];
+        nodes_list[j + 1] = tmp;
+        noSwap = 0;
+      }
+    }
+    if (noSwap == 1)
+      break;
+  }
+
+  return nodes_list;
+}
+
+// ============DEBUG============
 void DebugWriteDecodeFile(byte byte_from_file, code not_fitted_bits,
                           code fitted_bits, code buff, node *symb_code) {
   printf("\n=============================\n");
@@ -178,40 +205,4 @@ void DebugWriteDecodeFile(byte byte_from_file, code not_fitted_bits,
   printf("NODE:\n");
   PrintNode(symb_code);
   printf("\n=============================\n");
-}
-
-// TO-DO union with another GetSymbCode
-node *GetSymbByCode(code buff, node **node_list, byte count_nodes) {
-  node *res = NULL;
-  if (buff.code_len <= 0)
-    return NULL;
-  for (int i = 0; i < count_nodes; i++) {
-    byte tmp = buff.code;
-    tmp >>= (8 - node_list[i]->code_len);
-    if (tmp == node_list[i]->code && buff.code_len >= node_list[i]->code_len) {
-      res = node_list[i];
-    }
-  }
-  return res;
-}
-
-// TO-DO union with another sort
-node **SortNodes(node **nodes_list, int list_size) {
-  node *tmp;
-  bool noSwap;
-  for (int i = list_size - 1; i >= 0; i--) {
-    noSwap = 1;
-    for (int j = 0; j < i; j++) {
-      if (nodes_list[j]->code_len > nodes_list[j + 1]->code_len) {
-        tmp = nodes_list[j];
-        nodes_list[j] = nodes_list[j + 1];
-        nodes_list[j + 1] = tmp;
-        noSwap = 0;
-      }
-    }
-    if (noSwap == 1)
-      break;
-  }
-
-  return nodes_list;
 }

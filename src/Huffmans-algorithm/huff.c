@@ -15,7 +15,6 @@ int Huff(files files) {
   return err_code;
 }
 
-
 void F(byte n) {
   for (int i = 0; i < 8; i++) {
     printf("%d", ((128 & n) > 0));
