@@ -15,6 +15,7 @@ int Huff(files files) {
   return err_code;
 }
 
+
 void F(byte n) {
   for (int i = 0; i < 8; i++) {
     printf("%d", ((128 & n) > 0));
@@ -22,7 +23,6 @@ void F(byte n) {
   }
   printf("\n");
 }
-
 
 void F_32(size_t n)  {
   for (int i = 0; i < 64; i++) {
@@ -64,125 +64,103 @@ void PrintNode(node *input_node) {
     printf("NULL pointer\n ");
 }
 
-
 void TraverseAndPrintThreeWrapper(node* root, int init_x, int init_y){
   initscr();
   noecho();
+  raw();
   start_color();
   init_pair(1,COLOR_BLACK,COLOR_RED);
   init_pair(2,COLOR_WHITE, COLOR_BLUE);
-  int x_cur = 0;
-  int y_cur = 0;
-  TraverseAndPrintThree(root, init_x, init_y, &x_cur, &y_cur);
+  TraverseAndPrintThree(root, init_x, init_y, 256);
   getch();
+  getch();
+  getch();
+
   endwin();
 }
 
-// void TraverseAndPrintThree(node *in_node, int x, int y) {
-//   if (in_node) {
-//     if((*in_node).symb == '\n'){
-//        mvprintw(y, x, "(\\n:%d)", (*in_node).weight);
-//     } else if((*in_node).symb){
-//       mvprintw(y, x, "(%c:%d)", (*in_node).symb, (*in_node).weight);
-//     } else {
-//       mvprintw(y, x, "(%d)",(*in_node).weight);
-//     }
-//     if((*in_node).left_leaf){
-//       for (int i = x-1; i > x - (x*0.2); i--)
-//       {
-//          mvprintw(y+1,i,"_");
-//       }
-//       mvprintw(y+2,(x - (x*0.2))+2,"/");
-//       getch();
-//       TraverseAndPrintThree((*in_node).left_leaf, x - (x*0.2),y+3);
-//       getch();
-//     }
-//     if((*in_node).right_leaf){
-//       for (int i = x+7; i < x + (x*0.4); i++)
-//       {
-//         mvprintw(y+1,i,"_");
-//       }
-//       mvprintw(y+2,(x + (x*0.4))-2,"\\");
-//       getch();
-//       TraverseAndPrintThree((*in_node).right_leaf,x + (x*0.4),y+3);
-//       getch();
-//     }
-//     getch(); 
-//   }
-// }
-
-// void TraverseAndPrintThree(node *in_node, int x, int y, int k) {
-//   if (in_node) {
-//     if((*in_node).symb == '\n'){
-//        mvprintw(y, x, "(\\n:%d)", (*in_node).weight);
-//     } else if((*in_node).symb){
-//       mvprintw(y, x, "(%c:%d)", (*in_node).symb, (*in_node).weight);
-//     } else {
-//       mvprintw(y, x, "(%d)",(*in_node).weight);
-//     }
-//     if((*in_node).left_leaf){
-//       attron(COLOR_PAIR(1));
-//       getch();
-//       if(!(*in_node).left_leaf->left_leaf && !(*in_node).left_leaf->right_leaf){
-//         mvprintw(y+1,x,"|");
-//         TraverseAndPrintThree((*in_node).left_leaf, x, y+2, k);
-//       } else{
-//         for (int i = 1; i < 15; i++)
-//         {
-//           mvprintw(y+i,x,"|");
-//         }
-//         TraverseAndPrintThree((*in_node).left_leaf, x, (y + 11) + k, k+2);
-//       }
-//       attroff(COLOR_PAIR(2));
-//       getch();
-//     }
-//     if((*in_node).right_leaf){
-//       attron(COLOR_PAIR(2));
-//       getch();
-//       if(!(*in_node).right_leaf->left_leaf && !(*in_node).right_leaf->right_leaf) {
-//         mvprintw(y,x+5,"-");
-//         TraverseAndPrintThree((*in_node).right_leaf, x+6, y, k+2);
-//       } else{
-//         for (int i = 5; i < 15; i++)
-//         {
-//           mvprintw(y,x+i,"-");
-//         }
-//         TraverseAndPrintThree((*in_node).right_leaf, (x + 11) + k, y, k+2);
-//       }
-//       attroff(COLOR_PAIR(2));
-//       getch();
-//     }
-//     getch();
-//   }
-// }
-
-
-void TraverseAndPrintThree(node *in_node, int x, int y, int* x_cur, int* y_cur) {
+void TraverseAndPrintThree(node *in_node, int x, int y, int k) {
   if (in_node) {
 
-    if((*in_node).symb == '\n'){
-       mvprintw(y, x, "(\\n:%d)", (*in_node).weight);
-    } else if((*in_node).symb){
-      mvprintw(y, x, "(%c:%d)", (*in_node).symb, (*in_node).weight);
-    } else {
-      mvprintw(y, x, "(%d)",(*in_node).weight);
-    }
+    PrintLeaf(in_node, x, y);
+    getch();
 
-    getsyx(*y_cur, *x_cur);
-
+    k/=2;
+    
     if((*in_node).left_leaf){
-      getch();
-      TraverseAndPrintThree((*in_node).left_leaf, x, *y_cur+10, x_cur, y_cur);
-      getch();
-      getch();
-      getch();
+      PrintLeftBranch(x, y, k);
+      TraverseAndPrintThree((*in_node).left_leaf, x-k, y+4, k);
+
     }
     if((*in_node).right_leaf){
-      getch();
-      TraverseAndPrintThree((*in_node).right_leaf, *x_cur+10, y, x_cur, y_cur);
-      getch();
+      PrintRightBranch(x, y, k);
+      TraverseAndPrintThree((*in_node).right_leaf, x+k, y+4, k);
     }
-    getch();
     
+  }
+}
+
+void PrintLeaf(node* in_node,int x, int y){
+  if((*in_node).symb == '\n'){
+      mvprintw(y, x, "\\n", (*in_node).weight);
+      mvprintw(y+1, x, "%d", (*in_node).weight);
+      mvprintw(y+2, x, "_");
+      F_ncurses((*in_node).code,x,y+3);
+      mvprintw(y+11, x, "_");
+      mvprintw(y+12, x, "%d",(*in_node).code_len);
+    } else if((*in_node).symb){
+      mvprintw(y, x, "%c", (*in_node).symb, (*in_node).weight);
+      mvprintw(y+1, x, "%d", (*in_node).weight);
+      mvprintw(y+2, x, "_");
+      F_ncurses((*in_node).code,x,y+3);
+      mvprintw(y+11, x, "_");
+      mvprintw(y+12, x, "%d",(*in_node).code_len);
+    } else {
+      mvprintw(y, x, "%d",(*in_node).weight);
+    }
+  if((*in_node).right_leaf || (*in_node).right_leaf){
+    mvprintw(y+1, x, "|");
+  }
+}
+
+void F_ncurses(byte n,int x, int y) {
+  for (int i = 0; i < 8; i++) {
+    mvprintw(y+i,x,"%d", ((128 & n) > 0));
+    n <<= 1;
+  }
+}
+
+void PrintLeftBranch(int x, int y, int k){
+  //0
+  for (int i = x; i > x-k; i--)
+  {
+    mvprintw(y+2, i, "_");
+  }                     
+  mvprintw(y+3, x-k-1, "|0|");
+  
+}
+
+void PrintRightBranch(int x, int y, int k){
+  //1
+  for (int i = x; i < x+k; i++)
+  {
+    mvprintw(y+2, i, "_");
+  }
+  mvprintw(y+3, x+k-1, "|1|");
+}
+
+int GetMiddle(int x){
+  int res = 0;
+  if(x%2==0){
+    res = x/2;
+  } else {
+    res = x/2+1;
+  }
+  return res;
+}
+
+void SetLeafCount(node *input_node){
+  if(input_node){
+
   }
 }

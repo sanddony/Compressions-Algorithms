@@ -4,18 +4,12 @@
 int Encode(files files) {
   int sym_count;
   node **nodes_list = GetFrequencyOfBytes(files, &sym_count);
-  // PrintNodeList(nodes_list, sym_count);
   node *root = BuildTree(nodes_list, sym_count);
-  // PrintNode(root); // debug
+  TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0); // debug
   SetCodeForSymb(root, 0, -1, 0);
   TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0); // debug
-  // SerializationOfTheTree(files, root);
-  // node* wanted = NULL;
-  // byte l = 'a';
-  // F(l);
-  // GetSymbCode(root, &l, &wanted);
-  // PrintNode(wanted);
-  // WriteEncodeFile(files, root);
+  SerializationOfTheTree(files, root);
+  WriteEncodeFile(files, root);
 }
 
 node **SortRoots(node **nodes_list, int list_size) {
@@ -119,19 +113,10 @@ node *BuildTree(node **nodes_list, int sym_count) {
   // switch second element on the empty_node
 
   while (nodes_list[1]->is_root) {
-    // printf("Unite and insert\n");
     nodes_list[0] = UniteTwoNodes(nodes_list[0], nodes_list[1]);
     // free(nodes_list[1]); CHECK WHY IT RAISE SEGA
     nodes_list[1] = &empty_node;
-
-    // PrintNodeList(nodes_list,sym_count);
-    // printf("\n\n\n");
-
-    // printf("Sorted\n");
     SortRoots(nodes_list, sym_count);
-
-    // PrintNodeList(nodes_list,sym_count);
-    // printf("\n\n\n");
   }
 
   node *root = nodes_list[0];

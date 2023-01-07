@@ -5,7 +5,6 @@ int Decode(files files) {
   size_t count_bytes; // TO-DO Handle equal zero case(instant exit, file empty)
   node **nodes_list = RestoreTree(files, &count_nodes, &count_bytes);
   PrintNodeList(nodes_list, count_nodes);
-  // exit(1);
   WriteDecodeFile(files, nodes_list, count_nodes, &count_bytes);
 }
 
@@ -71,6 +70,9 @@ int WriteDecodeFile(files files, node **node_list, byte count_nodes, size_t* cou
   int encode_part_size = end_file - current_pos;
   //  of the encoded bytes
 
+  printf("count_nodes: %d\n",count_nodes);
+  printf("count_bytes: %d\n",(*count_bytes));
+  printf("encode_part_size: %d\n",encode_part_size);
 
   node *symb_code = NULL;
   code not_fitted_bits = {0, 0};
@@ -114,7 +116,7 @@ int WriteDecodeFile(files files, node **node_list, byte count_nodes, size_t* cou
       not_fitted_bits.code >>= 8 - abs(fitted_bits.code_len);
       not_fitted_bits.code_len = abs(fitted_bits.code_len);
 
-      fitted_bits.code_len = 8 - not_fitted_bits.code_len;
+      fitted_bits.code_len = 8 - not_fitted_bits.code_len; // ?
     }
 
     buff.code |= fitted_bits.code;
@@ -134,6 +136,8 @@ int WriteDecodeFile(files files, node **node_list, byte count_nodes, size_t* cou
       if (buff.code_len >= 0 && *count_bytes > 0){
         fwrite(&symb_code->symb, sizeof(byte), 1, files._out);
         (*count_bytes)--;
+        printf("count_bytes: %d\n",(*count_bytes));
+        printf("i: %d\n",i);
 
       }
 
