@@ -235,3 +235,30 @@ int WriteEncodeFile(files files, node *root) {
     fwrite(&output_byte, sizeof(byte), 1, files._out);
   }
 }
+
+// TO-DO Change all code to the int and check how it work
+// TO-DO Change F_ncurses to F_32(for ncurses)
+// int WriteEncodeFile(files files, node *root){
+  //for(i<file_size)
+    //while(buff.len < BUFFSIZE(32))
+      // |= not fitted bits with buffer // only in free buffer
+      // Get symb from file (break if EOF)
+      // Get it's code
+      // Check len of the code
+      //  If len of the code <= len of the free space in buffer
+      //    Shift on BUFFSIZE(32) - buff.code_len - code.code_len (until meaningful part of the buffer)
+      //    |= code and fitted bits
+      //    fitted bits len += code len
+      //  If len of the code > len of the free space in buffer
+      //    #len of the free space in buffer = BUFFSIZE(32) - buff.code_len#
+      //    Divide code by the part
+      //      (len of the free space in buffer) left bits add to the fitted bits (<< >>)
+      //      fitted bits len = (len of the free space in buffer)
+      //      (len of the code - len of the free space in buffer) right bits add to the not fitted bits (<< >>)
+      //      not fitted bits len = (len of the code - len of the free space in buffer)
+      //
+      //  buffer |= fitted bits
+      //  buffer len = fitted bits len
+      //
+    //  write buff to the file
+// }

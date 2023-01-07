@@ -20,7 +20,7 @@ struct node {
     node* right_leaf;
     int is_root;
     byte symb;
-    byte code;
+    int code;
     int code_len;  
     size_t weight;
 };

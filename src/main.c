@@ -66,7 +66,7 @@ int ParseParams(int argc, char** argv, files* files){
 }
 
 int ParseAlgorithm(char* alg_str, int * err_code){
-    int res = -1;
+    int res = 0;
     if(!strcmp(alg_str, "huff")){
         res = 0;
     }
