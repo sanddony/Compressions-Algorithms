@@ -104,16 +104,16 @@ void PrintLeaf(node* in_node,int x, int y){
       mvprintw(y, x, "\\n", (*in_node).weight);
       mvprintw(y+1, x, "%d", (*in_node).weight);
       mvprintw(y+2, x, "_");
-      F_ncurses((*in_node).code,x,y+3);
-      mvprintw(y+11, x, "_");
-      mvprintw(y+12, x, "%d",(*in_node).code_len);
+      F_ncurses_32((*in_node).code,x,y+3);
+      mvprintw(y+67, x, "_");
+      mvprintw(y+68, x, "%d",(*in_node).code_len);
     } else if((*in_node).symb){
       mvprintw(y, x, "%c", (*in_node).symb, (*in_node).weight);
       mvprintw(y+1, x, "%d", (*in_node).weight);
       mvprintw(y+2, x, "_");
-      F_ncurses((*in_node).code,x,y+3);
-      mvprintw(y+11, x, "_");
-      mvprintw(y+12, x, "%d",(*in_node).code_len);
+      F_ncurses_32((*in_node).code,x,y+3);
+      mvprintw(y+67, x, "_");
+      mvprintw(y+68, x, "%d",(*in_node).code_len);
     } else {
       mvprintw(y, x, "%d",(*in_node).weight);
     }
@@ -122,9 +122,16 @@ void PrintLeaf(node* in_node,int x, int y){
   }
 }
 
-void F_ncurses(byte n,int x, int y) {
+void F_ncurses(byte n, int x, int y) {
   for (int i = 0; i < 8; i++) {
     mvprintw(y+i,x,"%d", ((128 & n) > 0));
+    n <<= 1;
+  }
+}
+
+void F_ncurses_32(eight_bytes n, int x, int y) {
+  for (int i = 0; i < 64; i++) {
+     mvprintw(y+i,x,"%d",  ((0x8000000000000000 & n) > 0));
     n <<= 1;
   }
 }

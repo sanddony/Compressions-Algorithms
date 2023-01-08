@@ -43,7 +43,7 @@ node **GetFrequencyOfBytes(files files, int *sym_count) {
   //
 
   if(file_size == 0){
-    sprintf(stderr, "Empty file!\n");
+    fprintf(stderr, "Empty file!\n");
     exit(0);
   }
 
@@ -94,7 +94,7 @@ node **GetFrequencyOfBytes(files files, int *sym_count) {
 }
 
 // left should be less or equal right
-node *UniteTwoNodes(node *left, node *right) {
+node *UniteTwoNodes(node *left, node *right) {  
   node *res = malloc(sizeof(node));
   res->left_leaf = left;
   left->is_root = 0;
@@ -110,8 +110,11 @@ node *UniteTwoNodes(node *left, node *right) {
   return res;
 }
 
+// TO-DO Free mem
 node *BuildTree(node **nodes_list, int sym_count) {
-  node empty_node = {NULL, NULL, 0, 0, 0, 0, 0x7FFFFFFF};
+  node empty_node = {NULL, NULL, 0, 0, 0, 0, 0xFFFFFFFFFFFFFFFF};
+  // size_t x = 155576970220531065681649693;
+  int y = 1346269;
   // while root > 1 in list (or second element not a empty_node)
   // Take first two elements and build root with them in leafs
   // Switch first element on the new generated on before step, then
@@ -130,7 +133,7 @@ node *BuildTree(node **nodes_list, int sym_count) {
   return root;
 }
 
-void SetCodeForSymb(node *in_node, byte code, byte len, byte add_code) {
+void SetCodeForSymb(node *in_node, eight_bytes code, char len, byte add_code) {
   if (in_node) {
     len += 1;
     code <<= 1;
@@ -142,13 +145,12 @@ void SetCodeForSymb(node *in_node, byte code, byte len, byte add_code) {
   }
 }
 
-void CountSymbInThree(node *in_node, byte *size) {
+void CountSymbInThree(node *in_node, eight_bytes *count) {
   if (in_node) {
-    // TO-DO assert for len > 8
     if (!(*in_node).left_leaf && !(*in_node).right_leaf)
-      *size += 1;
-    CountSymbInThree((*in_node).left_leaf, size);
-    CountSymbInThree((*in_node).right_leaf, size);
+      *count += 1;
+    CountSymbInThree((*in_node).left_leaf, count);
+    CountSymbInThree((*in_node).right_leaf, count);
   }
 }
 
@@ -156,8 +158,8 @@ void WriteNodeInFile(node *in_node, FILE *files_out) {
   if (in_node) {
     if (!(*in_node).left_leaf && !(*in_node).right_leaf) {
       fwrite(&(*in_node).symb, sizeof(byte), 1, files_out);
-      fwrite(&(*in_node).code, sizeof(byte), 1, files_out);
-      fwrite(&(*in_node).code_len, sizeof(byte), 1, files_out);
+      fwrite(&(*in_node).code, sizeof(eight_bytes), 1, files_out);
+      fwrite(&(*in_node).code_len, sizeof(char), 1, files_out);
     }
     WriteNodeInFile((*in_node).left_leaf, files_out);
     WriteNodeInFile((*in_node).right_leaf, files_out);
@@ -165,100 +167,107 @@ void WriteNodeInFile(node *in_node, FILE *files_out) {
 }
 
 int SerializationOfTheTree(files files, node *root) {
-  // count of total symb (8 bytes)
-  // count of the nodes (1 bytes)
-  // code (1 byte)
-  // code_len (1 byte)
-  // symb (1 byte)
-  byte count = 0;
+  eight_bytes count = 0;
   CountSymbInThree(root, &count);
-  fwrite(&root->weight, sizeof(size_t), 1, files._out);
-  fwrite(&count, sizeof(byte), 1, files._out);
+  fwrite(&(root->weight), sizeof(eight_bytes), 1, files._out);
+  printf("%zu\n",(root->weight));
+  fwrite(&count, sizeof(eight_bytes), 1, files._out);
   WriteNodeInFile(root, files._out);
 }
 
-void GetSymbCode(node *in_node, byte *symb, node **out_node) {
+void GetSymbCode(node *in_node, byte *symb, code *desired) {
   if (in_node) {
-    if ((*in_node).symb == *symb)
-      (*out_node) = in_node;
-    GetSymbCode((*in_node).left_leaf, symb, out_node);
-    GetSymbCode((*in_node).right_leaf, symb, out_node);
+    if ((*in_node).symb == *symb){
+      (*desired).code = (*in_node).code;
+      (*desired).code_len = (*in_node).code_len;
+    }
+    GetSymbCode((*in_node).left_leaf, symb, desired);
+    GetSymbCode((*in_node).right_leaf, symb, desired);
   }
 }
 
-int WriteEncodeFile(files files, node *root) {
-  node *desired = NULL;
-  byte output_byte = 0;
-  byte len_output_byte = 8;
-  byte input_byte;
-  fseek(files._in, 0, SEEK_SET);
-  while (!feof(files._in) && len_output_byte > 0) {
-    input_byte = fgetc(files._in);
-    GetSymbCode(root, &input_byte, &desired);
-    if (!desired) {
-      fprintf(stderr,
-              "Erorr: Code for symb not found, three built incorrectly!");
-      exit(1);
-    }
-    if (len_output_byte >= (*desired).code_len) {
-      len_output_byte -= (*desired).code_len;
-
-      output_byte <<= (*desired).code_len;
-
-      output_byte |= (*desired).code;
-
-      if (len_output_byte == 0) {
-        fwrite(&output_byte, sizeof(byte), 1, files._out);
-        output_byte = 0;
-        len_output_byte = 8;
-      }
-    } else {
-      output_byte <<= len_output_byte;
-      byte tmp = (*desired).code >> (*desired).code_len - len_output_byte;
-
-      output_byte |= tmp;
-
-      fwrite(&output_byte, sizeof(byte), 1, files._out);
-      //======================
-      len_output_byte = (*desired).code_len - len_output_byte;
-      output_byte = 0;
-      tmp = (*desired).code << (8 - len_output_byte);
-      tmp >>= 8 - len_output_byte;
-
-      output_byte |= tmp;
-
-      len_output_byte = 8 - len_output_byte;
-    }
-  }
-  if (len_output_byte != 0) {
-    output_byte <<= len_output_byte;
-    fwrite(&output_byte, sizeof(byte), 1, files._out);
-  }
-}
-
-// TO-DO Change all code to the int and check how it work
-// TO-DO Change F_ncurses to F_32(for ncurses)
 // int WriteEncodeFile(files files, node *root){
-  //for(i<file_size)
+  //code = {0,0}
+  //fitted bits = {0,0}
+  //not fitted bits = {0,0}
+  //buff = {0,0}
+  // end_file = 0
+  //do 
+    //
     //while(buff.len < BUFFSIZE(32))
-      // |= not fitted bits with buffer // only in free buffer
-      // Get symb from file (break if EOF)
-      // Get it's code
-      // Check len of the code
-      //  If len of the code <= len of the free space in buffer
-      //    Shift on BUFFSIZE(32) - buff.code_len - code.code_len (until meaningful part of the buffer)
-      //    |= code and fitted bits
-      //    fitted bits len += code len
-      //  If len of the code > len of the free space in buffer
-      //    #len of the free space in buffer = BUFFSIZE(32) - buff.code_len#
-      //    Divide code by the part
-      //      (len of the free space in buffer) left bits add to the fitted bits (<< >>)
-      //      fitted bits len = (len of the free space in buffer)
-      //      (len of the code - len of the free space in buffer) right bits add to the not fitted bits (<< >>)
-      //      not fitted bits len = (len of the code - len of the free space in buffer)
+      //  |= not fitted bits with buffer // only in free buffer
+      //  
+      //  Get symb from file (if EOF end_file = 1)
+      //  
       //
+      //  If(!end_file) #adding byte from file to the buffer#
+        //  Get it's code
+        //  Check len of the code
+        //    If len of the code <= len of the free space in buffer
+        //      Shift on BUFFSIZE(32) - buff.code_len - code.code_len (until meaningful part of the buffer)
+        //      |= code and fitted bits
+        //      fitted bits len += code len
+        //    If len of the code > len of the free space in buffer
+        //      #len of the free space in buffer = BUFFSIZE(32) - buff.code_len#
+        //      Divide code by the part
+        //        (len of the free space in buffer) left bits add to the fitted bits (<< >>)
+        //        fitted bits len = (len of the free space in buffer)
+        //        (len of the code - len of the free space in buffer) right bits add to the not fitted bits (<< >>)
+        //        not fitted bits len = (len of the code - len of the free space in buffer)
+        //
       //  buffer |= fitted bits
-      //  buffer len = fitted bits len
-      //
+      //  buffer len += fitted bits len
+      //  fitted bits = {0,0}
+    //
     //  write buff to the file
+  //while(!end_file)
 // }
+
+int WriteEncodeFile(files files, node *root){
+  fseek(files._in, 0, SEEK_SET);
+  byte byte_from_file;
+  code code_from_file = {0,0};
+  code fitted_bits = {0,0};
+  code not_fitted_bits = {0,0};
+  code buff = {0,0};
+  byte end_file = 0;
+  do
+  {
+    buff.code = not_fitted_bits.code;
+    buff.code_len = not_fitted_bits.code_len;
+    not_fitted_bits.code_len = 0;
+    not_fitted_bits.code = 0;
+    while (buff.code_len < BUFFSIZE && !end_file) // !=
+    {
+      byte_from_file = fgetc(files._in);
+
+      end_file = feof(files._in);
+      if(!end_file) {
+        GetSymbCode(root, &byte_from_file, &code_from_file);
+
+        byte free_space_in_buffer = BUFFSIZE - buff.code_len;
+        if(code_from_file.code_len <= free_space_in_buffer) {
+          fitted_bits.code = code_from_file.code << (free_space_in_buffer- code_from_file.code_len);
+          fitted_bits.code_len = code_from_file.code_len;
+        } else {
+          fitted_bits.code = code_from_file.code >> (code_from_file.code_len-free_space_in_buffer);
+          fitted_bits.code_len = free_space_in_buffer;
+
+          not_fitted_bits.code_len = code_from_file.code_len-free_space_in_buffer;
+          not_fitted_bits.code = code_from_file.code << (BUFFSIZE - not_fitted_bits.code_len);
+        }
+      }
+      buff.code |= fitted_bits.code;
+      buff.code_len += fitted_bits.code_len;
+      fitted_bits.code_len = 0;
+      fitted_bits.code = 0;
+
+    }
+    printf("buff: ");
+    F_32(buff.code);
+    printf("\n");
+    fwrite(&buff.code, sizeof(eight_bytes), 1, files._out);
+    
+  } while (!end_file);
+  
+}

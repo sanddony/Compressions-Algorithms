@@ -11,24 +11,28 @@
 
 
 #define byte unsigned char
+#define eight_bytes unsigned long long
+
 #define BYTE_MAX_SIZE 255
+#define BUFFSIZE 64
 #define PRINT_MIDDLE 256
 
-typedef struct node node;
-struct node {
+
+typedef struct code_t{
+    eight_bytes code;
+    char code_len;
+}code;
+
+typedef struct node_t node;
+struct node_t {
     node* left_leaf;
     node* right_leaf;
     int is_root;
     byte symb;
-    int code;
-    int code_len;  
-    size_t weight;
+    eight_bytes code;
+    char code_len;
+    eight_bytes weight;
 };
-
-typedef struct code{
-    byte code;
-    int code_len;
-}code;
 
 
 //Debugging functions
@@ -44,6 +48,7 @@ void PrintLeaf(node* in_node,int x, int y);
 void PrintLeftBranch(int x, int y, int k);
 void PrintRightBranch(int x, int y, int k);
 void F_ncurses(byte n,int x, int y);
+void F_ncurses_32(eight_bytes n, int x, int y);
 int Huff(files files);
 
 

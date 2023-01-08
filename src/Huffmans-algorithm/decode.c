@@ -1,27 +1,29 @@
 #include "decode.h"
 
 int Decode(files files) {
-  byte count_nodes;
-  size_t count_bytes = 0; 
-  node **nodes_list = RestoreTree(files, &count_nodes, &count_bytes);
-  if(count_bytes == 0){
-    sprintf(stderr, "Empty file!\n");
+  eight_bytes count_nodes;
+  eight_bytes count_symb = 0; 
+  node **nodes_list = RestoreTree(files, &count_nodes, &count_symb);
+  printf("count_symb %lld\n",count_symb);
+  printf("count_nodes %lld\n",count_nodes);
+  PrintNodeList(nodes_list,count_nodes);
+  if(count_symb == 0){
+    fprintf(stderr, "Empty file!\n");
     exit(0);
   }
-  WriteDecodeFile(files, nodes_list, count_nodes, &count_bytes);
+  WriteDecodeFile(files, nodes_list, count_nodes, &count_symb);
 }
 
-node **RestoreTree(files files, byte *count_nodes, size_t* count_bytes) {
-  char ptr[100];
-  fread(count_bytes, sizeof(size_t),1 ,files._in);
+node **RestoreTree(files files, eight_bytes* count_nodes, eight_bytes* count_symb) {
+  fread(count_symb, sizeof(eight_bytes),1 ,files._in);
+  fread(count_nodes, sizeof(eight_bytes),1 ,files._in);
 
-  *count_nodes = fgetc(files._in);
   node **nodes_list = malloc((*count_nodes) * sizeof(node *));
   for (int i = 0; i < (*count_nodes); i++) {
     nodes_list[i] = malloc(sizeof(node));
-    nodes_list[i]->symb = fgetc(files._in);
-    nodes_list[i]->code = fgetc(files._in);
-    nodes_list[i]->code_len = fgetc(files._in);
+    fread(&(nodes_list[i]->symb), sizeof(byte),1 ,files._in);
+    fread(&(nodes_list[i]->code), sizeof(eight_bytes),1 ,files._in);
+    fread(&(nodes_list[i]->code_len), sizeof(byte),1 ,files._in);
   }
   return SortNodes(nodes_list, (*count_nodes));
 }
@@ -64,82 +66,113 @@ node **RestoreTree(files files, byte *count_nodes, size_t* count_bytes) {
 //        | * | | * | | * | | * | | * | | * | | * | | * | | 1 | not fitted bits |len = abs(fitted bits len)|
 //        +---+ +---+ +---+ +---+ +---+ +---+ +---+ +---+ +---+
 //  =====================================================
-int WriteDecodeFile(files files, node **node_list, byte count_nodes, size_t* count_bytes) {
+int WriteDecodeFile(files files, node **node_list, eight_bytes count_nodes, eight_bytes* count_symb) {
   //  Define size 
   int current_pos = ftell(files._in);
   fseek(files._in, 0, SEEK_END);
   int end_file = ftell(files._in);
   fseek(files._in, current_pos, SEEK_SET);
-  int encode_part_size = end_file - current_pos;
-  //  of the encoded bytes
+  int encode_part_size = (end_file - current_pos)/8;
+  //  of the encoded part (in bytes)
 
   node *symb_code = NULL;
   code not_fitted_bits = {0, 0};
   code fitted_bits = {0, 0};
   code buff = {0, 0};
-  byte byte_from_file = 0;
+  eight_bytes byte_from_file = 0;
   for (int i = 0; i < encode_part_size; ++i) {
     
     //  Handle situation when remaining in the buffer bits and not fitted bits in previous step
     //  more or equal 8, it means we need to handle this bits and no need to get new byte from file
-    if ((buff.code_len + not_fitted_bits.code_len) <= 8) {
-      byte_from_file = fgetc(files._in);
+    if ((buff.code_len + not_fitted_bits.code_len) <= BUFFSIZE) {
+      fread(&byte_from_file, sizeof(eight_bytes),1 ,files._in);
     } else {
       i--;
     }
-    //
-
-
-    fitted_bits.code =
+    printf("file            %.2d: ",i);
+    F_32(byte_from_file);
+    //111101111011110111100011010010001101100011111011000110100100011
+    //1111011110111101111000110100100011011000111110110001101001000110
+    fitted_bits.code_len = BUFFSIZE - (buff.code_len + not_fitted_bits.code_len);
+    if(fitted_bits.code_len != 0){
+      fitted_bits.code =
         byte_from_file >> (buff.code_len + not_fitted_bits.code_len);
-    fitted_bits.code_len = 8 - (buff.code_len + not_fitted_bits.code_len);
+    } else {
+      fitted_bits.code = 0;
+      fitted_bits.code_len = 0;
+    }
     
+
+    printf("fitted  |len = %.2d|: ", fitted_bits.code_len);
+    F_32(fitted_bits.code);
+    printf("not fit |len = %.2d|: ", not_fitted_bits.code_len);
+    F_32(not_fitted_bits.code);
+
     buff.code_len =
         buff.code_len + not_fitted_bits.code_len + fitted_bits.code_len;
 
     if(fitted_bits.code_len >= 0 ) { // FIRST CASE
-
+      printf("FIRST CASE\n");
       not_fitted_bits.code <<= fitted_bits.code_len; // old 
       buff.code |= not_fitted_bits.code;
       
-      not_fitted_bits.code = byte_from_file << (fitted_bits.code_len);
-      not_fitted_bits.code >>= (fitted_bits.code_len);
-      not_fitted_bits.code_len = (8 - fitted_bits.code_len);
+      if(fitted_bits.code_len != BUFFSIZE){
+        not_fitted_bits.code = byte_from_file << (fitted_bits.code_len);
+        not_fitted_bits.code >>= (fitted_bits.code_len);
+        not_fitted_bits.code_len = (BUFFSIZE - fitted_bits.code_len);
+      } else {
+        not_fitted_bits.code = 0;
+        not_fitted_bits.code_len = 0;
+      }
 
     } else { // SECOND CASE
-
+      printf("SECOND CASE\n");
       fitted_bits.code = not_fitted_bits.code ; // old 
       fitted_bits.code >>= abs(fitted_bits.code_len); // old 
 
-      not_fitted_bits.code <<= 8 - abs(fitted_bits.code_len);
-      not_fitted_bits.code >>= 8 - abs(fitted_bits.code_len);
+      not_fitted_bits.code <<= BUFFSIZE - abs(fitted_bits.code_len);
+      not_fitted_bits.code >>= BUFFSIZE - abs(fitted_bits.code_len);
       not_fitted_bits.code_len = abs(fitted_bits.code_len);
 
-      fitted_bits.code_len = 8 - not_fitted_bits.code_len; // ?
+      fitted_bits.code_len = BUFFSIZE - not_fitted_bits.code_len; // ?
     }
+    printf("current\n");
+    printf("not fit |len = %.2d|: ", not_fitted_bits.code_len);
+    F_32(not_fitted_bits.code);
 
     buff.code |= fitted_bits.code;
 
 
-    if (buff.code_len != 8) {
-      fprintf(stderr,"Error! Buff code len more then 8! |buff.code_len = %d|\n", buff.code_len);
+    if (buff.code_len != BUFFSIZE) {
+      fprintf(stderr,"Error! Buff code len not equal 64! |buff.code_len = %.2d|\n", buff.code_len);
       exit(1);
     }
-
-
+    printf("buff in |len = %.2d|: ", buff.code_len);
+    F_32(buff.code);
+    printf("\n===========================\n");
     while ((symb_code = GetSymbByCode(buff, node_list, count_nodes))) {
 
       buff.code <<= symb_code->code_len;
       buff.code_len -= symb_code->code_len;
 
-      if (buff.code_len >= 0 && *count_bytes > 0){
+      if (buff.code_len >= 0 && *count_symb > 0){
         fwrite(&symb_code->symb, sizeof(byte), 1, files._out);
-        (*count_bytes)--;
+        (*count_symb)--;
+        printf("%c",symb_code->symb);
       }
-
+      
     }
+    printf("\n===========================\n");
+    printf("buff out|len = %.2d|: ", buff.code_len );
+    F_32(buff.code);
+    printf("\n\n\n");
     buff.code_len = buff.code_len < 0 ? 0 : buff.code_len;
+    
+    if(buff.code_len > 0 && i == encode_part_size-1 && not_fitted_bits.code_len != 0){
+      i--;
+    }
   }
+  
 }
 
 node *GetSymbByCode(code buff, node **node_list, byte count_nodes) {
@@ -147,8 +180,7 @@ node *GetSymbByCode(code buff, node **node_list, byte count_nodes) {
   if (buff.code_len <= 0)
     return NULL;
   for (int i = 0; i < count_nodes; i++) {
-    byte tmp = buff.code;
-    tmp >>= (8 - node_list[i]->code_len);
+    eight_bytes tmp = buff.code >> (BUFFSIZE - node_list[i]->code_len);
     if (tmp == node_list[i]->code && buff.code_len >= node_list[i]->code_len) {
       res = node_list[i];
     }
@@ -206,3 +238,37 @@ void DebugWriteDecodeFile(byte byte_from_file, code not_fitted_bits,
   PrintNode(symb_code);
   printf("\n=============================\n");
 }
+
+
+// int WriteDecodeFile(files files, node **node_list, eight_bytes count_nodes, eight_bytes* count_symb) {
+//   //  Define size 
+//   int current_pos = ftell(files._in);
+//   fseek(files._in, 0, SEEK_END);
+//   int end_file = ftell(files._in);
+//   fseek(files._in, current_pos, SEEK_SET);
+//   int encode_part_size = (end_file - current_pos)/8;
+//   //  of the encoded part (in bytes)
+
+//   node *symb_code = NULL;
+//   code not_fitted_bits = {0, 0};
+//   code fitted_bits = {0, 0};
+//   code buff = {0, 0};
+//   eight_bytes byte_from_file = 0;
+//   for (int i = 0; i < encode_part_size; ++i) {
+    
+//     //  Handle situation when remaining in the buffer bits and not fitted bits in previous step
+//     //  more or equal BUFFSIZE, it means we need to handle this bits and no need to get new byte from file
+//     if ((buff.code_len + not_fitted_bits.code_len) <= BUFFSIZE) {
+//       fread(&byte_from_file, sizeof(eight_bytes),1 ,files._in);
+//     } else {
+//       i--;
+//     }
+//     //
+
+//   }
+// }
+
+
+//1000000000000000000000000000000000000000000000000000000000000000
+//1111010010110010001101111101111100110110110000110111100100010010
+// 1111111110111011011101111111111111110110111010110111111111110011
