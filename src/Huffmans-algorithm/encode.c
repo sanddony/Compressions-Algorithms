@@ -1,4 +1,4 @@
-#include "encode.h"
+  #include "encode.h"
 
 // TO-DO return err_code
 int Encode(files files) {
@@ -113,8 +113,6 @@ node *UniteTwoNodes(node *left, node *right) {
 // TO-DO Free mem
 node *BuildTree(node **nodes_list, int sym_count) {
   node empty_node = {NULL, NULL, 0, 0, 0, 0, 0xFFFFFFFFFFFFFFFF};
-  // size_t x = 155576970220531065681649693;
-  int y = 1346269;
   // while root > 1 in list (or second element not a empty_node)
   // Take first two elements and build root with them in leafs
   // Switch first element on the new generated on before step, then
@@ -170,7 +168,6 @@ int SerializationOfTheTree(files files, node *root) {
   eight_bytes count = 0;
   CountSymbInThree(root, &count);
   fwrite(&(root->weight), sizeof(eight_bytes), 1, files._out);
-  printf("%zu\n",(root->weight));
   fwrite(&count, sizeof(eight_bytes), 1, files._out);
   WriteNodeInFile(root, files._out);
 }
@@ -263,9 +260,9 @@ int WriteEncodeFile(files files, node *root){
       fitted_bits.code = 0;
 
     }
-    printf("buff: ");
-    F_32(buff.code);
-    printf("\n");
+    // printf("buff: ");
+    // F_32(buff.code);
+    // printf("\n");
     fwrite(&buff.code, sizeof(eight_bytes), 1, files._out);
     
   } while (!end_file);
