@@ -1,3 +1,3 @@
-# Realisations several algoritms in C
+# Realizations several algoritms in C
 Now ready only Huffmans algoritms
 
