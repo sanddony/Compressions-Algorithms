@@ -27,6 +27,6 @@ clean:
 	rm -f $(BUILD_DIR)/compress
 
 clean_o:
-	rm -rf *.o
+	rm -rf ../*.o
 
 rebuild: clean all

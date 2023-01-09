@@ -155,6 +155,7 @@ int WriteDecodeFile(files files, node **node_list, eight_bytes count_nodes, eigh
         fwrite(&symb_code->symb, sizeof(byte), 1, files._out);
         (*count_symb)--;
         // printf("%c",symb_code->symb);
+        // F(symb_code->symb);
       }
       
     }

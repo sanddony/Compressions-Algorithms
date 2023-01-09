@@ -6,7 +6,7 @@
 #include <string.h>
 
 
-static struct option long_options[] = {{"algorithm", required_argument, NULL, 'a'},
+static struct option long_options[] = {{"algorithm", optional_argument, NULL, 'a'},
                                        {"encode", no_argument, NULL, 'e'},
                                        {"decode", no_argument, NULL, 'd'},
                                        {"output", required_argument, NULL, 'o'},

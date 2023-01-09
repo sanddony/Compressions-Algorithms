@@ -36,6 +36,7 @@ node **SortRoots(node **nodes_list, int list_size) {
 }
 
 node **GetFrequencyOfBytes(files files, int *sym_count) {
+
   // Define file_size by move the file cursor to the end of the file
   fseek(files._in, 0, SEEK_END);
   int file_size = ftell(files._in);
@@ -89,7 +90,6 @@ node **GetFrequencyOfBytes(files files, int *sym_count) {
   }
   free(nodes_list);
   //
-
   return SortRoots(res_list, *sym_count);
 }
 
@@ -101,8 +101,11 @@ node *UniteTwoNodes(node *left, node *right) {
 
   res->right_leaf = right;
   right->is_root = 0;
-
+  // printf("left->weight %d\n",left->weight);
+  // printf("right->weight %d ",right->weight);
+  // F_32(right->weight);
   res->weight = left->weight + right->weight;
+  // printf("res->weight %d\n",res->weight);
   res->is_root = 1;
 
   res->code = 0;
@@ -110,7 +113,6 @@ node *UniteTwoNodes(node *left, node *right) {
   return res;
 }
 
-// TO-DO Free mem
 node *BuildTree(node **nodes_list, int sym_count) {
   node empty_node = {NULL, NULL, 0, 0, 0, 0, 0xFFFFFFFFFFFFFFFF};
   // while root > 1 in list (or second element not a empty_node)
@@ -130,6 +132,26 @@ node *BuildTree(node **nodes_list, int sym_count) {
 
   return root;
 }
+
+// node* GetMin(node* first, node* second){
+//   return ((first->weight >= second->weight) || second==NULL) ? first : second;
+// }
+
+// node *BuildTree(node **nodes_list, int sym_count) {
+//   node empty_node = {NULL, NULL, 0, 0, 0, 0, 0xFFFFFFFFFFFFFFFF};
+
+//   node** res_mass = malloc(sizeof(node*) * sym_count);
+//   for (int i = 0; i < sym_count; i++)
+//   {
+//     res_mass[i] = &empty_node;
+//   }
+//   res_mass[0]->weight = 0;
+//   int res_idx = 0;
+
+//   free(nodes_list);
+//   PrintNodeList(res_mass,sym_count);
+//   return res_mass[res_idx];
+// }
 
 void SetCodeForSymb(node *in_node, eight_bytes code, char len, byte add_code) {
   if (in_node) {
@@ -166,6 +188,7 @@ void WriteNodeInFile(node *in_node, FILE *files_out) {
 
 int SerializationOfTheTree(files files, node *root) {
   eight_bytes count = 0;
+  // TO-DO meaning huff byte
   CountSymbInThree(root, &count);
   fwrite(&(root->weight), sizeof(eight_bytes), 1, files._out);
   fwrite(&count, sizeof(eight_bytes), 1, files._out);
@@ -237,7 +260,6 @@ int WriteEncodeFile(files files, node *root){
     while (buff.code_len < BUFFSIZE && !end_file) // !=
     {
       byte_from_file = fgetc(files._in);
-
       end_file = feof(files._in);
       if(!end_file) {
         GetSymbCode(root, &byte_from_file, &code_from_file);

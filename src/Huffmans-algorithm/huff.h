@@ -13,8 +13,9 @@
 #define byte unsigned char
 #define eight_bytes unsigned long long
 
-#define BYTE_MAX_SIZE 255
+#define BYTE_MAX_SIZE 256
 #define BUFFSIZE 64
+
 #define PRINT_MIDDLE 256
 
 

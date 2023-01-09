@@ -18,31 +18,41 @@ declare -a tests=(
   "$DATA_SAMPLES_DIR/rus_text_2.txt"
   "$DATA_SAMPLES_DIR/test.txt"
   "$DATA_SAMPLES_DIR/tmp.txt"
+  "$DATA_SAMPLES_DIR/large_text_eng.txt"
+  "$DATA_SAMPLES_DIR/large_text_ru.txt"
 )
 
 testing() {
   extern=$(echo $@ | grep -e "\.[A-z]*$" -o)
-  echo $extern
   encode_file=$(echo $@ | sed "s/$extern/_encode$extern/")
   decode_file=$(echo $@ | sed "s/$extern/_decode$extern/")
 
+  START_ENCODE=$(date +%s%N | sed "s/N//")
   $BUILD_DIR/compress $ALGORITHM -e -i $@ -o $encode_file
+  END_ENCODE=$(date +%s%N | sed "s/N//")
+  ENCODE_TIME=$(($END_ENCODE - $START_ENCODE))
+
+
+  START_DECODE=$(date +%s%N | sed "s/N//")
   $BUILD_DIR/compress $ALGORITHM -d -i $encode_file -o $decode_file
-  
+  END_DECODE=$(date +%s%N | sed "s/N//")
+  DECODE_TIME=$(($END_DECODE - $START_DECODE))
+
   DIFF_RES="$(diff -s $@ $decode_file)"
   
   ((COUNTER++))
   if [ "$DIFF_RES" == "Files $@ and $decode_file are identical" ]; then
     ((SUCCESS++))
-    echo -e "\033[31m$FAIL\033[0m/\033[32m$SUCCESS\033[0m/$COUNTER \033[32msuccess\033[0m grep $@"
+    echo "\033[31m$FAIL\033[0m/\033[32m$SUCCESS\033[0m/$COUNTER \033[32msuccess\033[0m $@"
   else
     ((FAIL++))
-    echo -e "\033[31m$FAIL\033[0m/\033[32m$SUCCESS\033[0m/$COUNTER \033[31mfail\033[0m grep $@"
+    echo "\033[31m$FAIL\033[0m/\033[32m$SUCCESS\033[0m/$COUNTER \033[31mfail\033[0m $@"
   fi
-
+  ../tests/print_compression_infographic $ENCODE_TIME $encode_file $DECODE_TIME $decode_file
 
 }
 
+gcc ../tests/print_compression_infographic.c -o ../tests/print_compression_infographic
 
 for i in "${tests[@]}"; do
     var="-$var1"
@@ -50,11 +60,12 @@ for i in "${tests[@]}"; do
 done
 
 
-echo -e "\033[31mFAIL: $FAIL\033[0m"
-echo -e "\033[32mSUCCESS: $SUCCESS\033[0m"
-echo -e "ALL: $COUNTER"
+echo "\033[31mFAIL: $FAIL\033[0m"
+echo "\033[32mSUCCESS: $SUCCESS\033[0m"
+echo "ALL: $COUNTER"
 
 if [ "$DELETE_MODE" == "1" ]; then
     rm -f $DATA_SAMPLES_DIR/*_encode*
     rm -f $DATA_SAMPLES_DIR/*_decode*
+    rm -f ../tests/print_compression_infographic
 fi
