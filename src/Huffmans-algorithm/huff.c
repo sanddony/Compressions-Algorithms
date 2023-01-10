@@ -54,7 +54,7 @@ void PrintNode(node *input_node) {
       printf("^");
     printf("\n");
     printf("is_root: (%d) | ", (*input_node).is_root);
-    printf("weight: %d | ", (*input_node).weight);
+    printf("weight: %lld | ", (*input_node).weight);
     printf("left_leaf address: %p | ", (*input_node).left_leaf);
     printf("right_leaf address: %p | ", (*input_node).right_leaf);
     printf("self address: %p | ", input_node);
