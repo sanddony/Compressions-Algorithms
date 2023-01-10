@@ -39,6 +39,7 @@ struct node_t {
 //Debugging functions
 void F(byte n);
 void F_32(size_t n);
+void F_32_code(eight_bytes n,int start_dig, int stop_dig);
 
 void PrintNodeList(node** nodes_list, int sym_count);
 void PrintNode(node* input_node);

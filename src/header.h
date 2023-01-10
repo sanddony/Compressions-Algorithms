@@ -9,7 +9,7 @@
 static struct option long_options[] = {{"algorithm", optional_argument, NULL, 'a'},
                                        {"encode", no_argument, NULL, 'e'},
                                        {"decode", no_argument, NULL, 'd'},
-                                       {"output", required_argument, NULL, 'o'},
+                                       {"output", optional_argument, NULL, 'o'},
                                        {"input", required_argument, NULL, 'i'},
                                        {"visualization", no_argument, NULL, 'v'},
                                        {NULL, 0, NULL, 0}};

@@ -6,6 +6,8 @@ CCOV = -fprofile-arcs -ftest-coverage
 LIB_FILE = libs21_string.a
 HUFFMANS_DIR = ./Huffmans-algorithm
 BUILD_DIR = ../build/
+DATA_SAMPLES_DIR=../data-samples
+
 
 # ifeq ($(OS), Darwin)
 # else
@@ -25,6 +27,9 @@ huff.o:
 clean:
 	rm -f *.o
 	rm -f $(BUILD_DIR)/compress
+	rm -f ../tests/print_compression_infographic
+	rm -f $(DATA_SAMPLES_DIR)/*_encode*
+	rm -f $(DATA_SAMPLES_DIR)/*_decode*
 
 clean_o:
 	rm -rf ../*.o

@@ -43,6 +43,8 @@ int ParseParams(int argc, char **argv, files *files) {
       (*files)._in = GetFile(input_file);
       if (!(*files)._in) {
         fprintf(stderr, "Can't open file with this name: %s\n", input_file);
+        err_code = 1; /// TO-DO Debug not exit
+        exit(1);
         err_code = 1;
       }
       break;

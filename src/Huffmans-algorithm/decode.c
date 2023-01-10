@@ -4,7 +4,6 @@ int Decode(files files) {
   eight_bytes count_nodes;
   eight_bytes count_symb = 0; 
   node **nodes_list = RestoreTree(files, &count_nodes, &count_symb);
-
   if(count_symb == 0){
     fprintf(stderr, "Empty file!\n");
     exit(0);
@@ -174,13 +173,6 @@ node **RestoreTree(files files, eight_bytes* count_nodes, eight_bytes* count_sym
 //}
 
 int WriteDecodeFile(files files, node **node_list, eight_bytes count_nodes, eight_bytes* count_symb) {
-    // for (int i = 0; i < encode_part_size; ++i) {{
-    //      get 64 bits
-    //      splash on fitted and not fitted
-    //      add fitted to free space in buffer
-    //      catch symb from  buffer, until NULL
-    //      add not fitted part to buffer
-    // }
 
     //  Define size
     int current_pos = ftell(files._in);
@@ -195,22 +187,27 @@ int WriteDecodeFile(files files, node **node_list, eight_bytes count_nodes, eigh
     code fitted_bits = {0, 0};
     code buff = {0, 0};
     eight_bytes byte_from_file = 0;
+
+
     for (int i = 0; i < encode_part_size; ++i) {
 
         fread(&byte_from_file, sizeof(eight_bytes),1 ,files._in);
 
-        printf("byte_from_file |064|: ");
-        F_32(byte_from_file);
+
+        if(files.visualization) printf("byte_from_file |064|: ");
+        if(files.visualization) F_32(byte_from_file);
+
+        if(files.visualization) printf("buffer |%.3d|:         ",buff.code_len);
+        if(files.visualization) F_32_code(buff.code, 0, buff.code_len);
 
         fitted_bits.code_len = BUFFSIZE - buff.code_len;
-        fitted_bits.code = byte_from_file << buff.code_len;
-        fitted_bits.code >>= buff.code_len;
-
-        printf("fitted |%.3d|:     ",fitted_bits.code_len);
-        F_32(fitted_bits.code);
+        fitted_bits.code = byte_from_file >> buff.code_len;
+ 
+        if(files.visualization) printf("fitted |%.3d|:         ",fitted_bits.code_len);
+        if(files.visualization) F_32_code(fitted_bits.code, BUFFSIZE - fitted_bits.code_len, 64);
 
         not_fitted_bits.code_len = BUFFSIZE - fitted_bits.code_len;
-        if(!not_fitted_bits.code_len){
+        if(not_fitted_bits.code_len != 0){
             not_fitted_bits.code = byte_from_file << fitted_bits.code_len;
             not_fitted_bits.code >>= fitted_bits.code_len;
         } else{
@@ -218,21 +215,23 @@ int WriteDecodeFile(files files, node **node_list, eight_bytes count_nodes, eigh
         }
 
 
-        printf("not fitted |%.3d|: ",not_fitted_bits.code_len);
-        F_32(not_fitted_bits.code);
+        if(files.visualization) printf("not fitted |%.3d|:     ",not_fitted_bits.code_len);
+        if(files.visualization) F_32_code(not_fitted_bits.code, BUFFSIZE - not_fitted_bits.code_len, 64);
 
         buff.code_len+=fitted_bits.code_len;
         buff.code |= fitted_bits.code;
 
-        printf("buffer |%.3d|:     ",buff.code_len);
-        F_32(buff.code);
+        if(files.visualization) printf("buffer |%.3d|:         ",buff.code_len);
+        if(files.visualization) F_32_code(buff.code, 0, buff.code_len);
 
         if (buff.code_len != BUFFSIZE) {
             fprintf(stderr,"Error! Buff code len not equal 64! |buff.code_len = %.2d|\n", buff.code_len);
             exit(1);
         }
 
-        printf("\n====================================\n");
+        if(files.visualization) printf("\n====================================\n");
+        
+
         while ((symb_code = GetSymbByCode(buff, node_list, count_nodes)) &&
                 buff.code_len > node_list[0]->code_len) {
 
@@ -242,25 +241,27 @@ int WriteDecodeFile(files files, node **node_list, eight_bytes count_nodes, eigh
             if (buff.code_len >= 0 && *count_symb > 0){
                 fwrite(&symb_code->symb, sizeof(byte), 1, files._out);
                 (*count_symb)--;
-                printf("%c",symb_code->symb);
+                if(files.visualization) printf("%c",symb_code->symb);
             }
         }
-        printf("\n====================================\n");
+        if(files.visualization) printf("\n====================================\n");
 
-        printf("buffer |%.3d|:     ",buff.code_len);
-        F_32(buff.code);
+        if(files.visualization) printf("buffer |%.3d|:         ",buff.code_len);
+        if(files.visualization) F_32_code(buff.code, 0, buff.code_len);
 
         not_fitted_bits.code <<= (BUFFSIZE - buff.code_len - not_fitted_bits.code_len);
+        
         buff.code |= not_fitted_bits.code;
         buff.code_len+=not_fitted_bits.code_len;
 
-        printf("not fitted |%.3d|: ",not_fitted_bits.code_len);
-        F_32(not_fitted_bits.code);
+        if(files.visualization) printf("not fitted |%.3d|:     ",not_fitted_bits.code_len);
+        if(files.visualization) F_32_code(not_fitted_bits.code, 0, not_fitted_bits.code_len);
 
-        printf("buffer |%.3d|:     ",buff.code_len);
-        F_32(buff.code);
+        if(files.visualization) printf("buffer |%.3d|:         ",buff.code_len);
+        if(files.visualization) F_32_code(buff.code, 0, buff.code_len);
 
-        printf("\n====================================\n");
+        if(files.visualization) printf("\n====================================\n");
+
         while ((symb_code = GetSymbByCode(buff, node_list, count_nodes)) &&
                 buff.code_len > 0) {
             buff.code <<= symb_code->code_len;
@@ -269,20 +270,38 @@ int WriteDecodeFile(files files, node **node_list, eight_bytes count_nodes, eigh
             if (buff.code_len >= 0 && *count_symb > 0){
                 fwrite(&symb_code->symb, sizeof(byte), 1, files._out);
                 (*count_symb)--;
-                printf("%c",symb_code->symb);
+                if(files.visualization) printf("%c",symb_code->symb);
             }
         }
-        printf("\n====================================\n");
+        if(files.visualization) printf("\n===============i=%.2d==================\n",i);
+        
+        if(files.visualization) printf("buffer |%.3d|:         ",buff.code_len);
+        if(files.visualization) F_32_code(buff.code, 0, buff.code_len);
 
+        if(files.visualization) printf("\n\n\n");
+
+        not_fitted_bits.code = 0;
+        not_fitted_bits.code_len = 0;
+        fitted_bits.code = 0;
+        fitted_bits.code_len = 0;
+
+        if (buff.code_len == BUFFSIZE) {
+            fprintf(stderr,"Error! Can't decode file!\n");
+            exit(1);
+        }
+      // if(i == 6)exit(1);
     }
 }
 
-node *GetSymbByCode(code buff, node **node_list, byte count_nodes) {
+node *GetSymbByCode(code buff, node **node_list, eight_bytes count_nodes) {
   node *res = NULL;
-  if (buff.code_len <= 0)
+
+  if (buff.code_len <= 0) // <= node_list[0]->code_len
     return NULL;
+
   for (int i = 0; i < count_nodes; i++) {
     eight_bytes tmp = buff.code >> (BUFFSIZE - node_list[i]->code_len);
+
     if (tmp == node_list[i]->code && buff.code_len >= node_list[i]->code_len) {
       res = node_list[i];
     }

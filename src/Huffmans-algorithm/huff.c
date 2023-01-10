@@ -30,6 +30,23 @@ void F_32(size_t n)  {
   }
   printf("\n");
 }
+//\033[31m$ 033[0m/\033[32m
+
+
+
+// Numbeing starts from left bit
+void F_32_code(eight_bytes n, int start_dig, int stop_dig)  {
+  // if(stop_dig < start_dig){
+  //   fprintf(stderr,"F_32_code_wrapper: stop_dig < start_dig(%d < %d)\n", stop_dig, start_dig);
+  //   return;
+  // }
+  for (int i = 0; i < 64; i++) {
+    if(i >= start_dig && i < stop_dig) printf("\033[1;31m%d\033[0m", ((0x8000000000000000 & n) > 0));
+    else printf("%d", ((0x8000000000000000 & n) > 0));
+    n <<= 1;
+  }
+  printf("\n");
+}
 
 void PrintNodeList(node **nodes_list, int sym_count) {
   for (int i = 0; i < sym_count; i++) {
@@ -47,12 +64,8 @@ void PrintNode(node *input_node) {
     F((*input_node).symb);
     printf("symb: (%c) \n", (*input_node).symb);
     printf("code:");
-    F((*input_node).code);
-    for (int i = 0; i < 5 + (8 - (*input_node).code_len); i++)
-      printf(" ");
-    for (int i = 0; i < (*input_node).code_len; i++)
-      printf("^");
-    printf("\n");
+    F_32_code((*input_node).code,BUFFSIZE - (*input_node).code_len ,BUFFSIZE);
+    printf("code_len: (%d) | ", (*input_node).code_len);
     printf("is_root: (%d) | ", (*input_node).is_root);
     printf("weight: %lld | ", (*input_node).weight);
     printf("left_leaf address: %p | ", (*input_node).left_leaf);

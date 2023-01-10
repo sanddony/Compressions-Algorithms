@@ -20,21 +20,31 @@ declare -a tests=(
   "$DATA_SAMPLES_DIR/tmp.txt"
   "$DATA_SAMPLES_DIR/large_text_eng.txt"
   "$DATA_SAMPLES_DIR/large_text_ru.txt"
+  "$BUILD_DIR/compress"
 )
 
 testing() {
-  extern=$(echo $@ | grep -e "\.[A-z]*$" -o)
-  encode_file=$(echo $@ | sed "s/$extern/_encode$extern/")
-  decode_file=$(echo $@ | sed "s/$extern/_decode$extern/")
-
+  extern="$(echo $@ | grep -e "\.[A-z]*$" -o)"
+  echo $extern
+  if [ "$extern" ]; then
+    encode_file=$(echo $@ | sed "s/$extern/_encode$extern/")
+    decode_file=$(echo $@ | sed "s/$extern/_decode$extern/")
+  else
+    file_name="$(echo $@ | grep -e "[A-z]*$" -o)"
+    encode_file="$DATA_SAMPLES_DIR/$file_name.encode"
+    decode_file="$DATA_SAMPLES_DIR/$file_name.decode"
+  fi
+  
   START_ENCODE=$(date +%s%N | sed "s/N//")
   $BUILD_DIR/compress $ALGORITHM -e -i $@ -o $encode_file
+  echo "$BUILD_DIR/compress $ALGORITHM -e -i $@ -o $encode_file"
   END_ENCODE=$(date +%s%N | sed "s/N//")
   ENCODE_TIME=$(($END_ENCODE - $START_ENCODE))
 
 
   START_DECODE=$(date +%s%N | sed "s/N//")
   $BUILD_DIR/compress $ALGORITHM -d -i $encode_file -o $decode_file
+  echo "$BUILD_DIR/compress $ALGORITHM -d -i $encode_file -o $decode_file"
   END_DECODE=$(date +%s%N | sed "s/N//")
   DECODE_TIME=$(($END_DECODE - $START_DECODE))
 
@@ -52,6 +62,7 @@ testing() {
 
 }
 
+
 gcc ../tests/print_compression_infographic.c -o ../tests/print_compression_infographic
 
 for i in "${tests[@]}"; do
@@ -66,6 +77,8 @@ echo "ALL: $COUNTER"
 
 if [ "$DELETE_MODE" == "1" ]; then
     rm -f $DATA_SAMPLES_DIR/*_encode*
+    rm -f $DATA_SAMPLES_DIR/*_encode
     rm -f $DATA_SAMPLES_DIR/*_decode*
+    rm -f $DATA_SAMPLES_DIR/*_decode
     rm -f ../tests/print_compression_infographic
 fi
