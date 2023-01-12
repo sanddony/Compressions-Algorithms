@@ -14,6 +14,8 @@ node** RestoreTree(files files, eight_bytes* count_nodes, eight_bytes* count_sym
 int WriteDecodeFile(files files, node** node_list, eight_bytes count_nodes, eight_bytes* count_symb);
 node **SortNodes(node **nodes_list, int list_size);
 node *GetSymbByCode(code buff, node **node_list, eight_bytes count_nodes);
+void DecodeBuff(files files, node **node_list, eight_bytes count_nodes,
+                eight_bytes *count_symb, code* buff);
 //
 
 void DebugWriteDecodeFile(byte byte_from_file,code not_fitted_bits, 

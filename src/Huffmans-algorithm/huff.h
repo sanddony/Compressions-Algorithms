@@ -46,6 +46,7 @@ void PrintNode(node* input_node);
 void TraverseAndPrintThree(node *in_node, int x, int y, int k);
 void TraverseAndPrintThreeWrapper(node* root, int init_x, int init_y);
 int GetMiddle(int x);
+void PrintTree(node* in_node);
 void PrintLeaf(node* in_node,int x, int y);
 void PrintLeftBranch(int x, int y, int k);
 void PrintRightBranch(int x, int y, int k);

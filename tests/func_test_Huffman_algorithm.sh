@@ -18,9 +18,13 @@ declare -a tests=(
   "$DATA_SAMPLES_DIR/rus_text_2.txt"
   "$DATA_SAMPLES_DIR/test.txt"
   "$DATA_SAMPLES_DIR/tmp.txt"
-  "$DATA_SAMPLES_DIR/large_text_eng.txt"
+  # "$DATA_SAMPLES_DIR/large_text_eng.txt"
   "$DATA_SAMPLES_DIR/large_text_ru.txt"
   "$BUILD_DIR/compress"
+  "$DATA_SAMPLES_DIR/black_and_white.png"
+  "$DATA_SAMPLES_DIR/black_sun.png"
+  "$DATA_SAMPLES_DIR/chess_black_and_white.png"
+  "$DATA_SAMPLES_DIR/black_and_white_1.jpeg"
 )
 
 testing() {
@@ -36,15 +40,15 @@ testing() {
   fi
   
   START_ENCODE=$(date +%s%N | sed "s/N//")
-  $BUILD_DIR/compress $ALGORITHM -e -i $@ -o $encode_file
   echo "$BUILD_DIR/compress $ALGORITHM -e -i $@ -o $encode_file"
+  $BUILD_DIR/compress $ALGORITHM -e -i $@ -o $encode_file
   END_ENCODE=$(date +%s%N | sed "s/N//")
   ENCODE_TIME=$(($END_ENCODE - $START_ENCODE))
 
 
   START_DECODE=$(date +%s%N | sed "s/N//")
-  $BUILD_DIR/compress $ALGORITHM -d -i $encode_file -o $decode_file
   echo "$BUILD_DIR/compress $ALGORITHM -d -i $encode_file -o $decode_file"
+  $BUILD_DIR/compress $ALGORITHM -d -i $encode_file -o $decode_file
   END_DECODE=$(date +%s%N | sed "s/N//")
   DECODE_TIME=$(($END_DECODE - $START_DECODE))
 
@@ -59,7 +63,8 @@ testing() {
     echo "\033[31m$FAIL\033[0m/\033[32m$SUCCESS\033[0m/$COUNTER \033[31mfail\033[0m $@"
   fi
   ../tests/print_compression_infographic $ENCODE_TIME $encode_file $DECODE_TIME $decode_file
-
+  rm -f $decode_file
+  rm -f $encode_file
 }
 
 
@@ -76,9 +81,5 @@ echo "\033[32mSUCCESS: $SUCCESS\033[0m"
 echo "ALL: $COUNTER"
 
 if [ "$DELETE_MODE" == "1" ]; then
-    rm -f $DATA_SAMPLES_DIR/*_encode*
-    rm -f $DATA_SAMPLES_DIR/*_encode
-    rm -f $DATA_SAMPLES_DIR/*_decode*
-    rm -f $DATA_SAMPLES_DIR/*_decode
     rm -f ../tests/print_compression_infographic
 fi

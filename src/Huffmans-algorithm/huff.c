@@ -63,6 +63,8 @@ void PrintNode(node *input_node) {
       printf("symb_bytes:");
     F((*input_node).symb);
     printf("symb: (%c) \n", (*input_node).symb);
+    printf("symb:");
+    F((*input_node).symb);
     printf("code:");
     F_32_code((*input_node).code,BUFFSIZE - (*input_node).code_len ,BUFFSIZE);
     printf("code_len: (%d) | ", (*input_node).code_len);
@@ -178,8 +180,10 @@ int GetMiddle(int x){
   return res;
 }
 
-void SetLeafCount(node *input_node){
-  if(input_node){
-
+void PrintTree(node* in_node){
+  if(in_node){
+    PrintNode(in_node);
+    PrintTree(in_node->left_leaf);
+    PrintTree(in_node->right_leaf);
   }
 }

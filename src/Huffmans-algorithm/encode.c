@@ -1,13 +1,14 @@
-  #include "encode.h"
+#include "encode.h"
 
 // TO-DO return err_code
 int Encode(files files) {
   int sym_count;
   node **nodes_list = GetFrequencyOfBytes(files, &sym_count);
   node *root = BuildTree(nodes_list, sym_count);
-  if(files.visualization) TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0);
+  // if(files.visualization) TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0);
   SetCodeForSymb(root, 0, -1, 0);
-  if(files.visualization) TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0);
+  if(files.visualization) PrintTree(root);
+  // if(files.visualization) TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0);
   SerializationOfTheTree(files, root);
   WriteEncodeFile(files, root);
 }
@@ -206,43 +207,6 @@ void GetSymbCode(node *in_node, byte *symb, code *desired) {
   }
 }
 
-// int WriteEncodeFile(files files, node *root){
-  //code = {0,0}
-  //fitted bits = {0,0}
-  //not fitted bits = {0,0}
-  //buff = {0,0}
-  // end_file = 0
-  //do 
-    //
-    //while(buff.len < BUFFSIZE(32))
-      //  |= not fitted bits with buffer // only in free buffer
-      //  
-      //  Get symb from file (if EOF end_file = 1)
-      //  
-      //
-      //  If(!end_file) #adding byte from file to the buffer#
-        //  Get it's code
-        //  Check len of the code
-        //    If len of the code <= len of the free space in buffer
-        //      Shift on BUFFSIZE(32) - buff.code_len - code.code_len (until meaningful part of the buffer)
-        //      |= code and fitted bits
-        //      fitted bits len += code len
-        //    If len of the code > len of the free space in buffer
-        //      #len of the free space in buffer = BUFFSIZE(32) - buff.code_len#
-        //      Divide code by the part
-        //        (len of the free space in buffer) left bits add to the fitted bits (<< >>)
-        //        fitted bits len = (len of the free space in buffer)
-        //        (len of the code - len of the free space in buffer) right bits add to the not fitted bits (<< >>)
-        //        not fitted bits len = (len of the code - len of the free space in buffer)
-        //
-      //  buffer |= fitted bits
-      //  buffer len += fitted bits len
-      //  fitted bits = {0,0}
-    //
-    //  write buff to the file
-  //while(!end_file)
-// }
-
 int WriteEncodeFile(files files, node *root){
   fseek(files._in, 0, SEEK_SET);
   byte byte_from_file;
@@ -251,8 +215,11 @@ int WriteEncodeFile(files files, node *root){
   code not_fitted_bits = {0,0};
   code buff = {0,0};
   byte end_file = 0;
+  int i = 0; // debug
   do
   {
+    // i++;
+    // if(i==10) exit(1);
     buff.code = not_fitted_bits.code;
     buff.code_len = not_fitted_bits.code_len;
     not_fitted_bits.code_len = 0;
@@ -262,6 +229,10 @@ int WriteEncodeFile(files files, node *root){
       byte_from_file = fgetc(files._in);
       end_file = feof(files._in);
       if(!end_file) {
+        // printf("symb: ");
+        // F(byte_from_file);
+        // printf("code: ");
+        // F_32_code(code_from_file.code, BUFFSIZE - code_from_file.code_len, BUFFSIZE);
         GetSymbCode(root, &byte_from_file, &code_from_file);
 
         byte free_space_in_buffer = BUFFSIZE - buff.code_len;
