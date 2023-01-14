@@ -2,21 +2,16 @@
 
 // TO-DO return err_code
 int Encode(files files) {
-  int sym_count;
+  eight_bytes sym_count;
   node **nodes_list = GetFrequencyOfBytes(files, &sym_count);
   node *root = BuildTree(nodes_list, sym_count);  
-  // if(files.visualization) TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0);
   SetCodeForSymb(root, 0, -1, 0);
-  if(files.visualization) PrintTree(root);
-  // if(files.visualization) TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0);
-  SerializationOfTheTree(files, root);
+  SerializationOfTheTree(files, root, sym_count);
   WriteEncodeFile(files, root);
 }
 
+// Sort by Weight
 node **SortRoots(node **nodes_list, int list_size) {
-  // Handle NULL case: node can be NULL
-  // If symb == NULL, get to the end
-  // Sort by Weight
   node *tmp;
   bool noSwap;
   for (int i = list_size - 1; i >= 0; i--) {
@@ -36,7 +31,7 @@ node **SortRoots(node **nodes_list, int list_size) {
   return nodes_list;
 }
 
-node **GetFrequencyOfBytes(files files, int *sym_count) {
+node **GetFrequencyOfBytes(files files, eight_bytes *sym_count) {
 
   // Define file_size by move the file cursor to the end of the file
   fseek(files._in, 0, SEEK_END);
@@ -102,11 +97,7 @@ node *UniteTwoNodes(node *left, node *right) {
 
   res->right_leaf = right;
   right->is_root = 0;
-  // printf("left->weight %d\n",left->weight);
-  // printf("right->weight %d ",right->weight);
-  // F_32(right->weight);
   res->weight = left->weight + right->weight;
-  // printf("res->weight %d\n",res->weight);
   res->is_root = 1;
 
   res->code = 0;
@@ -115,45 +106,24 @@ node *UniteTwoNodes(node *left, node *right) {
   return res;
 }
 
-node *BuildTree(node **nodes_list, int sym_count) {
+node *BuildTree(node **nodes_list, eight_bytes sym_count) {
   node empty_node = {NULL, NULL, 0, 0, 0, 0, 0xFFFFFFFFFFFFFFFF};
   // while root > 1 in list (or second element not a empty_node)
   // Take first two elements and build root with them in leafs
   // Switch first element on the new generated on before step, then
   // switch second element on the empty_node
-
   while (nodes_list[1]->is_root) {
+    //GetTwoMin 
     nodes_list[0] = UniteTwoNodes(nodes_list[0], nodes_list[1]);
     // free(nodes_list[1]); CHECK WHY IT RAISE SEGA
     nodes_list[1] = &empty_node;
-    SortRoots(nodes_list, sym_count);
+    SortRoots(nodes_list, sym_count); //
   }
-
   node *root = nodes_list[0];
   free(nodes_list);
-
   return root;
 }
 
-// node* GetMin(node* first, node* second){
-//   return ((first->weight >= second->weight) || second==NULL) ? first : second;
-// }
-
-// node *BuildTree(node **nodes_list, int sym_count) {
-//   node empty_node = {NULL, NULL, 0, 0, 0, 0, 0xFFFFFFFFFFFFFFFF};
-
-//   node** res_mass = malloc(sizeof(node*) * sym_count);
-//   for (int i = 0; i < sym_count; i++)
-//   {
-//     res_mass[i] = &empty_node;
-//   }
-//   res_mass[0]->weight = 0;
-//   int res_idx = 0;
-
-//   free(nodes_list);
-//   PrintNodeList(res_mass,sym_count);
-//   return res_mass[res_idx];
-// }
 
 void SetCodeForSymb(node *in_node, eight_bytes code, char len, byte add_code) {
   if (in_node) {
@@ -164,15 +134,6 @@ void SetCodeForSymb(node *in_node, eight_bytes code, char len, byte add_code) {
     (*in_node).code_len = len;
     SetCodeForSymb((*in_node).left_leaf, code, len, 0);
     SetCodeForSymb((*in_node).right_leaf, code, len, 1);
-  }
-}
-
-void CountSymbInThree(node *in_node, eight_bytes *count) {
-  if (in_node) {
-    if (!(*in_node).left_leaf && !(*in_node).right_leaf)
-      *count += 1;
-    CountSymbInThree((*in_node).left_leaf, count);
-    CountSymbInThree((*in_node).right_leaf, count);
   }
 }
 
@@ -188,12 +149,10 @@ void WriteNodeInFile(node *in_node, FILE *files_out) {
   }
 }
 
-int SerializationOfTheTree(files files, node *root) {
-  eight_bytes count = 0;
+int SerializationOfTheTree(files files, node *root, eight_bytes sym_count) {
   // TO-DO meaning huff byte
-  CountSymbInThree(root, &count);
   fwrite(&(root->weight), sizeof(eight_bytes), 1, files._out);
-  fwrite(&count, sizeof(eight_bytes), 1, files._out);
+  fwrite(&sym_count, sizeof(eight_bytes), 1, files._out);
   WriteNodeInFile(root, files._out);
 }
 
@@ -219,8 +178,6 @@ int WriteEncodeFile(files files, node *root){
   int i = 0; // debug
   do
   {
-    // i++;
-    // if(i==10) exit(1);
     buff.code = not_fitted_bits.code;
     buff.code_len = not_fitted_bits.code_len;
     not_fitted_bits.code_len = 0;
@@ -249,11 +206,32 @@ int WriteEncodeFile(files files, node *root){
       fitted_bits.code = 0;
 
     }
-    // printf("buff: ");
-    // F_32(buff.code);
-    // printf("\n");
     fwrite(&buff.code, sizeof(eight_bytes), 1, files._out);
     
   } while (!end_file);
   
 }
+
+// node *BuildTree(node **nodes_list, eight_bytes sym_count){
+//   node empty_node = {NULL, NULL, 0, 0, 0, 0, 0xFFFFFFFFFFFFFFFF};
+//   node** res_mass = malloc(sizeof(node*) * sym_count);
+//   node** p1 = &nodes_list[0];
+//   node** p2 = &res_mass[0];
+//   node** insert = &res_mass[0];
+//   int i = 0;
+//   *insert = UniteTwoNodes(*p1, *(p1+1));
+//   insert++;
+//   p1+=2;
+//   while (p1 != &nodes_list[sym_count-1] && insert != p2)
+//   {
+//     if((p1 + 1) < (p2 + 1)){
+//       *insert = UniteTwoNodes(*p1, *(p1+1));
+//       p1+=2;
+//     } else {
+//       *insert = UniteTwoNodes(*p1, *p2);
+//       p1+=2;
+//       p2++;
+//     }
+//     insert++;
+//   }
+// }
