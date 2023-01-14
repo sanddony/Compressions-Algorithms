@@ -60,8 +60,6 @@ void PrintNodeList(node **nodes_list, int sym_count) {
 void PrintNode(node *input_node) {
   if (input_node) {
     printf("\n=======================\n");
-      printf("symb_bytes:");
-    F((*input_node).symb);
     printf("symb: (%c) \n", (*input_node).symb);
     printf("symb:");
     F((*input_node).symb);
@@ -185,5 +183,18 @@ void PrintTree(node* in_node){
     PrintNode(in_node);
     PrintTree(in_node->left_leaf);
     PrintTree(in_node->right_leaf);
+  }
+}
+
+int PrintNeededNodeTree(node* in_node, byte symb){
+  if(in_node){
+    if((*in_node).symb == symb && !(*in_node).left_leaf && !(*in_node).right_leaf){
+      PrintNode(in_node);
+      return 1;
+    }
+    PrintNeededNodeTree(in_node->left_leaf, symb);
+    PrintNeededNodeTree(in_node->right_leaf, symb);
+    
+
   }
 }

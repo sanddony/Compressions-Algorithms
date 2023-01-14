@@ -4,7 +4,7 @@
 int Encode(files files) {
   int sym_count;
   node **nodes_list = GetFrequencyOfBytes(files, &sym_count);
-  node *root = BuildTree(nodes_list, sym_count);
+  node *root = BuildTree(nodes_list, sym_count);  
   // if(files.visualization) TraverseAndPrintThreeWrapper(root, PRINT_MIDDLE, 0);
   SetCodeForSymb(root, 0, -1, 0);
   if(files.visualization) PrintTree(root);
@@ -110,6 +110,7 @@ node *UniteTwoNodes(node *left, node *right) {
   res->is_root = 1;
 
   res->code = 0;
+  res->code_len = 0;
   res->symb = 0;
   return res;
 }
@@ -198,7 +199,7 @@ int SerializationOfTheTree(files files, node *root) {
 
 void GetSymbCode(node *in_node, byte *symb, code *desired) {
   if (in_node) {
-    if ((*in_node).symb == *symb){
+    if ((*in_node).symb == *symb && !(*in_node).left_leaf && !(*in_node).right_leaf){
       (*desired).code = (*in_node).code;
       (*desired).code_len = (*in_node).code_len;
     }
@@ -229,12 +230,7 @@ int WriteEncodeFile(files files, node *root){
       byte_from_file = fgetc(files._in);
       end_file = feof(files._in);
       if(!end_file) {
-        // printf("symb: ");
-        // F(byte_from_file);
-        // printf("code: ");
-        // F_32_code(code_from_file.code, BUFFSIZE - code_from_file.code_len, BUFFSIZE);
         GetSymbCode(root, &byte_from_file, &code_from_file);
-
         byte free_space_in_buffer = BUFFSIZE - buff.code_len;
         if(code_from_file.code_len <= free_space_in_buffer) {
           fitted_bits.code = code_from_file.code << (free_space_in_buffer- code_from_file.code_len);
