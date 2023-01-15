@@ -44,16 +44,15 @@ int PrintNeededNodeTree(node* in_node, byte symb);
 
 void PrintNodeList(node** nodes_list, int sym_count);
 void PrintNode(node* input_node);
-void TraverseAndPrintThree(node *in_node, int x, int y, int k);
-void TraverseAndPrintThreeWrapper(node* root, int init_x, int init_y);
-int GetMiddle(int x);
-void PrintTree(node* in_node);
-void PrintLeaf(node* in_node,int x, int y);
-void PrintLeftBranch(int x, int y, int k);
-void PrintRightBranch(int x, int y, int k);
-void F_ncurses(byte n,int x, int y);
-void F_ncurses_32(eight_bytes n, int x, int y);
-int Huff(files files);
+void Huff(files files);
+
+
+// utils for decode and encode
+code ZeroingCode();
+void AddingCode(code* result_code, code* added_code);
+
+typedef int (*ruleCompare)(node*, node*);
+node **BubleSort(node **nodes_list, int list_size, ruleCompare rule);
 
 
 #endif //HUFFMAN_HEADER_H

@@ -28,9 +28,24 @@ typedef struct files {
 }files;
 
 
-int ParseParams(int argc, char** argv, files* files);
-int ParseAlgorithm(char* alg_str, int * err_code);
+void ParseParams(int argc, char** argv, files* files);
+int ParseAlgorithm(char *alg_str);
 FILE *GetFile(char *path);
 void Usage();
+
+#define ERRLIST_SIZE 10
+
+
+
+static const char *const errlist[ERRLIST_SIZE] = {
+    [0] = "No such file or directory:",
+    [1] = "No available algoritms with this name:",
+    [2] = "GetSymbCode Error! Get byte, which haven't a code!",
+    [3] = "Empty file!",
+    [4] = "Error! Not all code was decoded!",
+    [5] = "Error! Can't decode file!",
+    [6] = "Error! Buff code len not equal 64! |buff.code_len =",
+};
+void ErrorHandler(int errnum, char* prm, ...);
 
 #endif //COMPRESSIONS_ALGORITHMS_HEADER_H

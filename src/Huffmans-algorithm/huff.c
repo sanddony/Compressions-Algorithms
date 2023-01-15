@@ -1,18 +1,13 @@
 #include "huff.h"
 #include "decode.h"
 #include "encode.h"
-#include <ncurses.h>
-// TO-DO: Decide where need single pointer, where double. Maybe we need allocate
-// mem for mass and then work with this pointers.
 
-int Huff(files files) {
-  int err_code = 0;
+void Huff(files files) {
   if (files.mode == ENCODE) {
-    err_code = Encode(files);
+    Encode(files);
   } else {
-    err_code = Decode(files);
+    Decode(files);
   }
-  return err_code;
 }
 
 void F(byte n) {
@@ -30,9 +25,6 @@ void F_32(size_t n)  {
   }
   printf("\n");
 }
-//\033[31m$ 033[0m/\033[32m
-
-
 
 // Numbeing starts from left bit
 void F_32_code(eight_bytes n, int start_dig, int stop_dig)  {
@@ -60,6 +52,7 @@ void PrintNodeList(node **nodes_list, int sym_count) {
 void PrintNode(node *input_node) {
   if (input_node) {
     printf("\n=======================\n");
+    printf("num: %d\n",(*input_node).symb);
     printf("symb: (%c) \n", (*input_node).symb);
     printf("symb:");
     F((*input_node).symb);
@@ -74,108 +67,6 @@ void PrintNode(node *input_node) {
     printf("\n=======================\n");
   } else
     printf("NULL pointer\n ");
-}
-
-void TraverseAndPrintThreeWrapper(node* root, int init_x, int init_y){
-  initscr();
-  noecho();
-  raw();
-  start_color();
-  init_pair(1,COLOR_BLACK,COLOR_RED);
-  init_pair(2,COLOR_WHITE, COLOR_BLUE);
-  TraverseAndPrintThree(root, init_x, init_y, 256);
-  getch();
-  getch();
-  getch();
-
-  endwin();
-}
-
-void TraverseAndPrintThree(node *in_node, int x, int y, int k) {
-  if (in_node) {
-
-    PrintLeaf(in_node, x, y);
-    getch();
-
-    k/=2;
-    
-    if((*in_node).left_leaf){
-      PrintLeftBranch(x, y, k);
-      TraverseAndPrintThree((*in_node).left_leaf, x-k, y+4, k);
-
-    }
-    if((*in_node).right_leaf){
-      PrintRightBranch(x, y, k);
-      TraverseAndPrintThree((*in_node).right_leaf, x+k, y+4, k);
-    }
-    
-  }
-}
-
-void PrintLeaf(node* in_node,int x, int y){
-  if((*in_node).symb == '\n'){
-      mvprintw(y, x, "\\n", (*in_node).weight);
-      mvprintw(y+1, x, "%d", (*in_node).weight);
-      mvprintw(y+2, x, "_");
-      F_ncurses_32((*in_node).code,x,y+3);
-      mvprintw(y+67, x, "_");
-      mvprintw(y+68, x, "%d",(*in_node).code_len);
-    } else if((*in_node).symb){
-      mvprintw(y, x, "%c", (*in_node).symb, (*in_node).weight);
-      mvprintw(y+1, x, "%d", (*in_node).weight);
-      mvprintw(y+2, x, "_");
-      F_ncurses_32((*in_node).code,x,y+3);
-      mvprintw(y+67, x, "_");
-      mvprintw(y+68, x, "%d",(*in_node).code_len);
-    } else {
-      mvprintw(y, x, "%d",(*in_node).weight);
-    }
-  if((*in_node).right_leaf || (*in_node).right_leaf){
-    mvprintw(y+1, x, "|");
-  }
-}
-
-void F_ncurses(byte n, int x, int y) {
-  for (int i = 0; i < 8; i++) {
-    mvprintw(y+i,x,"%d", ((128 & n) > 0));
-    n <<= 1;
-  }
-}
-
-void F_ncurses_32(eight_bytes n, int x, int y) {
-  for (int i = 0; i < 64; i++) {
-     mvprintw(y+i,x,"%d",  ((0x8000000000000000 & n) > 0));
-    n <<= 1;
-  }
-}
-
-void PrintLeftBranch(int x, int y, int k){
-  //0
-  for (int i = x; i > x-k; i--)
-  {
-    mvprintw(y+2, i, "_");
-  }                     
-  mvprintw(y+3, x-k-1, "|0|");
-  
-}
-
-void PrintRightBranch(int x, int y, int k){
-  //1
-  for (int i = x; i < x+k; i++)
-  {
-    mvprintw(y+2, i, "_");
-  }
-  mvprintw(y+3, x+k-1, "|1|");
-}
-
-int GetMiddle(int x){
-  int res = 0;
-  if(x%2==0){
-    res = x/2;
-  } else {
-    res = x/2+1;
-  }
-  return res;
 }
 
 void PrintTree(node* in_node){
@@ -198,3 +89,91 @@ int PrintNeededNodeTree(node* in_node, byte symb){
 
   }
 }
+
+code ZeroingCode() {
+  code res = {0, 0};
+  return res;
+}
+
+void AddingCode(code* result_code, code* added_code){
+    (*result_code).code_len += (*added_code).code_len;
+    (*result_code).code |= (*added_code).code;
+}
+
+// O(n^2)
+node **BubleSort(node **nodes_list, int list_size, ruleCompare rule) {
+  node *tmp;
+  bool noSwap;
+  for (int i = list_size - 1; i >= 0; i--) {
+    noSwap = 1;
+    for (int j = 0; j < i; j++) {
+      if(rule(nodes_list[j], nodes_list[j+1])) {
+        tmp = nodes_list[j];
+        nodes_list[j] = nodes_list[j + 1];
+        nodes_list[j + 1] = tmp;
+        noSwap = 0;
+      }
+    }
+    if (noSwap == 1)
+      break;
+  }
+
+  return nodes_list;
+}
+
+
+// #include <stdio.h>
+
+// void lamuto_sort(int array[], int low, int high, int order);
+// int partition(int array[], int low, int high, int order);
+// void swap(int *a, int *b);
+
+// void lamuto_sort(int array[], int low, int high, int order) {
+//     if (low < high) {
+//         int pivot = partition(array, low, high, order);
+//         lamuto_sort(array, low, pivot - 1, order);
+//         lamuto_sort(array, pivot + 1, high, order);
+//     }
+// }
+
+// int partition(int array[], int low, int high, int order) {
+//     int pivot = array[high];
+//     int i = low - 1;
+//     for (int j = low; j <= high - 1; j++) {
+//         if ((order == 1 && array[j] <= pivot) || (order == -1 && array[j] >= pivot)) {
+//             i++;
+//             swap(&array[i], &array[j]);
+//         }
+//     }
+//     swap(&array[i + 1], &array[high]);
+//     return i + 1;
+// }
+
+// void swap(int *a, int *b) {
+//     int temp = *a;
+//     *a = *b;
+//     *b = temp;
+// }
+
+// int main() {
+//     int array[] = {5, 2, 9, 1, 5, 6};
+//     int n = sizeof(array) / sizeof(array[0]);
+//     printf("Original array: ");
+//     for (int i = 0; i < n; i++) {
+//         printf("%d ", array[i]);
+//     }
+//     int order = -1; // -1 for descending, 1 for ascending
+//     lamuto_sort(array, 0, n - 1, order);
+//     printf("\nSorted array: ");
+//     for (int i = 0; i < n; i++) {
+//         printf("%d ", array[i]);
+//     }
+
+//     order = 1; // -1 for descending, 1 for ascending
+//     lamuto_sort(array, 0, n - 1, order);
+//     printf("\nSorted array: ");
+//     for (int i = 0; i < n; i++) {
+//         printf("%d ", array[i]);
+//     }
+//     return 0;
+// }

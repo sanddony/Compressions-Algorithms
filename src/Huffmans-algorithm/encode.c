@@ -1,96 +1,31 @@
 #include "encode.h"
 
-// TO-DO return err_code
-int Encode(files files) {
+void Encode(files files) {
   eight_bytes sym_count;
-  node **nodes_list = GetFrequencyOfBytes(files, &sym_count);
-  node *root = BuildTree(nodes_list, sym_count);  
+  node **full_nodes_list;
+  node **nodes_list = GetFrequencyOfBytes(files, &sym_count, &full_nodes_list);
+  node *root = BuildTree(nodes_list, sym_count);
   SetCodeForSymb(root, 0, -1, 0);
   SerializationOfTheTree(files, root, sym_count);
-  WriteEncodeFile(files, root);
+  WriteEncodeFile(files, root, full_nodes_list);
 }
 
-// Sort by Weight
-node **SortRoots(node **nodes_list, int list_size) {
-  node *tmp;
-  bool noSwap;
-  for (int i = list_size - 1; i >= 0; i--) {
-    noSwap = 1;
-    for (int j = 0; j < i; j++) {
-      if (nodes_list[j]->weight > nodes_list[j + 1]->weight) {
-        tmp = nodes_list[j];
-        nodes_list[j] = nodes_list[j + 1];
-        nodes_list[j + 1] = tmp;
-        noSwap = 0;
-      }
-    }
-    if (noSwap == 1)
-      break;
-  }
+node **GetFrequencyOfBytes(files files, eight_bytes *sym_count,
+                           node ***full_nodes_list) {
 
-  return nodes_list;
-}
+  int file_size = DefineFileSize(files);
 
-node **GetFrequencyOfBytes(files files, eight_bytes *sym_count) {
+  AllocateMemForMassOn256Elem(full_nodes_list);
 
-  // Define file_size by move the file cursor to the end of the file
-  fseek(files._in, 0, SEEK_END);
-  int file_size = ftell(files._in);
-  fseek(files._in, 0, SEEK_SET);
-  //
+  CountingRepetitionsOfBytes(file_size, files, full_nodes_list);
 
-  if(file_size == 0){
-    fprintf(stderr, "Empty file!\n");
-    exit(0);
-  }
+  node **res_list = GetMassWithMeaningBytes(full_nodes_list, sym_count);
 
-  // Allocate mem for mass, which contain 255 elements. Exactly that much,
-  // because program encode bytes and BYTE_MAX_SIZE=255 (0x11111111)-uc
-  node **nodes_list = malloc(sizeof(node *) * BYTE_MAX_SIZE);
-  for (int i = 0; i < BYTE_MAX_SIZE; i++) {
-    nodes_list[i] = malloc(sizeof(node));
-    nodes_list[i]->symb = i;
-    nodes_list[i]->is_root = 1;
-  }
-  //
-
-  byte tmp[1];
-  for (int i = 0; i < file_size; i++) {
-    fread(tmp, sizeof(byte), 1, files._in);
-    for (int k = 0; k < BYTE_MAX_SIZE; k++) {
-      if (nodes_list[k]->symb == tmp[0]) {
-        nodes_list[k]->weight++;
-      }
-    }
-  }
-
-  (*sym_count) = 0;
-  int res_list_indx[BYTE_MAX_SIZE];
-  for (int i = 0; i < BYTE_MAX_SIZE; i++) {
-    if (nodes_list[i]->weight != 0) {
-      res_list_indx[(*sym_count)++] = i;
-    }
-  }
-
-  node **res_list = malloc(sizeof(node *) * (*sym_count));
-  for (int i = 0; i < (*sym_count); i++) {
-    res_list[i] = malloc(sizeof(node));
-    res_list[i]->is_root = 1;
-    res_list[i]->symb = nodes_list[res_list_indx[i]]->symb;
-    res_list[i]->weight = nodes_list[res_list_indx[i]]->weight;
-  }
-
-  // free mass for 256 bits combination
-  for (int i = 0; i < BYTE_MAX_SIZE; i++) {
-    free(nodes_list[i]);
-  }
-  free(nodes_list);
-  //
-  return SortRoots(res_list, *sym_count);
+  return BubleSort(res_list, *sym_count, pred_ascending_by_weight);
 }
 
 // left should be less or equal right
-node *UniteTwoNodes(node *left, node *right) {  
+node *UniteTwoNodes(node *left, node *right) {
   node *res = malloc(sizeof(node));
   res->left_leaf = left;
   left->is_root = 0;
@@ -113,17 +48,13 @@ node *BuildTree(node **nodes_list, eight_bytes sym_count) {
   // Switch first element on the new generated on before step, then
   // switch second element on the empty_node
   while (nodes_list[1]->is_root) {
-    //GetTwoMin 
     nodes_list[0] = UniteTwoNodes(nodes_list[0], nodes_list[1]);
-    // free(nodes_list[1]); CHECK WHY IT RAISE SEGA
     nodes_list[1] = &empty_node;
-    SortRoots(nodes_list, sym_count); //
+    BubleSort(nodes_list, sym_count, pred_ascending_by_weight); //
   }
   node *root = nodes_list[0];
-  free(nodes_list);
   return root;
 }
-
 
 void SetCodeForSymb(node *in_node, eight_bytes code, char len, byte add_code) {
   if (in_node) {
@@ -156,61 +87,119 @@ int SerializationOfTheTree(files files, node *root, eight_bytes sym_count) {
   WriteNodeInFile(root, files._out);
 }
 
-void GetSymbCode(node *in_node, byte *symb, code *desired) {
-  if (in_node) {
-    if ((*in_node).symb == *symb && !(*in_node).left_leaf && !(*in_node).right_leaf){
-      (*desired).code = (*in_node).code;
-      (*desired).code_len = (*in_node).code_len;
-    }
-    GetSymbCode((*in_node).left_leaf, symb, desired);
-    GetSymbCode((*in_node).right_leaf, symb, desired);
+code GetSymbCode(node **node_list, byte *symb) {
+  code res = {0, 0};
+  if (node_list[*symb]->right_leaf && node_list[*symb]->left_leaf) {
+    PrintNode(node_list[*symb]);
+    ErrorHandler(2, "");
   }
+  res.code = node_list[*symb]->code;
+  res.code_len = node_list[*symb]->code_len;
+  return res;
 }
 
-int WriteEncodeFile(files files, node *root){
+int WriteEncodeFile(files files, node *root, node **full_nodes_list) {
   fseek(files._in, 0, SEEK_SET);
   byte byte_from_file;
-  code code_from_file = {0,0};
-  code fitted_bits = {0,0};
-  code not_fitted_bits = {0,0};
-  code buff = {0,0};
+  code code_from_file = {0, 0};
+  code fitted_bits = {0, 0};
+  code not_fitted_bits = {0, 0};
+  code buff = {0, 0};
   byte end_file = 0;
-  int i = 0; // debug
-  do
-  {
-    buff.code = not_fitted_bits.code;
-    buff.code_len = not_fitted_bits.code_len;
-    not_fitted_bits.code_len = 0;
-    not_fitted_bits.code = 0;
+  do {
+
+    buff = not_fitted_bits;
+    not_fitted_bits = ZeroingCode();
+
     while (buff.code_len < BUFFSIZE && !end_file) // !=
     {
       byte_from_file = fgetc(files._in);
       end_file = feof(files._in);
-      if(!end_file) {
-        GetSymbCode(root, &byte_from_file, &code_from_file);
-        byte free_space_in_buffer = BUFFSIZE - buff.code_len;
-        if(code_from_file.code_len <= free_space_in_buffer) {
-          fitted_bits.code = code_from_file.code << (free_space_in_buffer- code_from_file.code_len);
-          fitted_bits.code_len = code_from_file.code_len;
-        } else {
-          fitted_bits.code = code_from_file.code >> (code_from_file.code_len-free_space_in_buffer);
-          fitted_bits.code_len = free_space_in_buffer;
-
-          not_fitted_bits.code_len = code_from_file.code_len-free_space_in_buffer;
-          not_fitted_bits.code = code_from_file.code << (BUFFSIZE - not_fitted_bits.code_len);
-        }
+      if (!end_file) {
+        ReadAndParseNewByte(&code_from_file, full_nodes_list, byte_from_file, &buff,
+                         &fitted_bits, &not_fitted_bits);
       }
-      buff.code |= fitted_bits.code;
-      buff.code_len += fitted_bits.code_len;
-      fitted_bits.code_len = 0;
-      fitted_bits.code = 0;
-
+      AddingCode(&buff, &fitted_bits);
+      fitted_bits = ZeroingCode();
     }
+
     fwrite(&buff.code, sizeof(eight_bytes), 1, files._out);
-    
+
   } while (!end_file);
-  
 }
+
+void ReadAndParseNewByte(code* code_from_file, node **full_nodes_list, byte byte_from_file, code* buff,
+                         code* fitted_bits, code* not_fitted_bits) {
+  (*code_from_file) = GetSymbCode(full_nodes_list, &byte_from_file);
+  byte free_space_in_buffer = BUFFSIZE - (*buff).code_len;
+  if ((*code_from_file).code_len <= free_space_in_buffer) {
+    (*fitted_bits).code = (*code_from_file).code
+                       << (free_space_in_buffer - (*code_from_file).code_len);
+    (*fitted_bits).code_len = (*code_from_file).code_len;
+  } else {
+    (*fitted_bits).code =
+        (*code_from_file).code >> ((*code_from_file).code_len - free_space_in_buffer);
+    (*fitted_bits).code_len = free_space_in_buffer;
+
+    (*not_fitted_bits).code_len = (*code_from_file).code_len - free_space_in_buffer;
+    (*not_fitted_bits).code = (*code_from_file).code
+                           << (BUFFSIZE - (*not_fitted_bits).code_len);
+  }
+}
+
+int DefineFileSize(files files){
+  fseek(files._in, 0, SEEK_END);
+  int file_size = ftell(files._in);
+  fseek(files._in, 0, SEEK_SET);
+  if (file_size == 0) {
+    ErrorHandler(3, "");
+  }
+  return file_size;
+}
+
+// Allocate mem for mass, which contain 256 elements. Exactly that much,
+// because program encode bytes and BYTE_MAX_SIZE=256 (0x11111111)-uc
+void AllocateMemForMassOn256Elem(node ***full_nodes_list){
+  (*full_nodes_list) = malloc(sizeof(node *) * BYTE_MAX_SIZE);
+  for (int i = 0; i < BYTE_MAX_SIZE; i++) {
+    (*full_nodes_list)[i] = malloc(sizeof(node));
+    (*full_nodes_list)[i]->symb = i;
+    (*full_nodes_list)[i]->is_root = 1;
+  }
+}
+
+void CountingRepetitionsOfBytes(int file_size, files files, node ***full_nodes_list){
+  byte tmp[1];
+  for (int i = 0; i < file_size; i++) {
+    fread(tmp, sizeof(byte), 1, files._in);
+    for (int k = 0; k < BYTE_MAX_SIZE; k++) {
+      if ((*full_nodes_list)[k]->symb == tmp[0]) {
+        (*full_nodes_list)[k]->weight++;
+      }
+    }
+  }
+}
+
+node **GetMassWithMeaningBytes(node ***full_nodes_list, eight_bytes *sym_count){
+  (*sym_count) = 0;
+  int res_list_indx[BYTE_MAX_SIZE];
+  for (int i = 0; i < BYTE_MAX_SIZE; i++) {
+    if ((*full_nodes_list)[i]->weight != 0) {
+      res_list_indx[(*sym_count)++] = i;
+    }
+  }
+
+  node **res_list = malloc(sizeof(node *) * (*sym_count));
+  for (int i = 0; i < (*sym_count); i++) {
+    res_list[i] = (*full_nodes_list)[res_list_indx[i]];
+  }
+  return res_list;
+}
+
+int pred_ascending_by_weight(node* first, node* second){
+  return first->weight > second->weight;
+}
+
 
 // node *BuildTree(node **nodes_list, eight_bytes sym_count){
 //   node empty_node = {NULL, NULL, 0, 0, 0, 0, 0xFFFFFFFFFFFFFFFF};
