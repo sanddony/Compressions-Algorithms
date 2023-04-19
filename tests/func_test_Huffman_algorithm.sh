@@ -11,28 +11,29 @@ DATA_SAMPLES_DIR="../data-samples"
 RESULTS_DIR="../data-samples/results"
 ALGORITHM="-a huff"
 
-declare -a tests=(
-  "$DATA_SAMPLES_DIR/eng_text.txt"
-  "$DATA_SAMPLES_DIR/eng_text_2.txt"
-  "$DATA_SAMPLES_DIR/rus_text.txt"
-  "$DATA_SAMPLES_DIR/rus_text_2.txt"
-  "$DATA_SAMPLES_DIR/test.txt"
-  "$DATA_SAMPLES_DIR/tmp.txt"
-  "$DATA_SAMPLES_DIR/large_text_eng.txt"
-  "$DATA_SAMPLES_DIR/large_text_ru.txt"
-  "$BUILD_DIR/compress"
-  "$DATA_SAMPLES_DIR/black_and_white.png"
-  "$DATA_SAMPLES_DIR/black_sun.png"
-  "$DATA_SAMPLES_DIR/chess_black_and_white.png"
-  "$DATA_SAMPLES_DIR/black_and_white_1.jpeg"
-  "$DATA_SAMPLES_DIR/chees_board.jpeg"
-  "$DATA_SAMPLES_DIR/pdf_test.pdf"
-  "$DATA_SAMPLES_DIR/voina-i-mir.epub"
-  "$DATA_SAMPLES_DIR/pdf_test_2.PDF"
-  "$DATA_SAMPLES_DIR/cringe.jpg"
-  "$DATA_SAMPLES_DIR/fib.txt"
-  "$DATA_SAMPLES_DIR/ncurses.txt"
-)
+# declare -a tests=(
+#   "$DATA_SAMPLES_DIR/eng_text.txt"
+#   "$DATA_SAMPLES_DIR/eng_text_2.txt"
+#   "$DATA_SAMPLES_DIR/rus_text.txt"
+#   "$DATA_SAMPLES_DIR/rus_text_2.txt"
+#   "$DATA_SAMPLES_DIR/test.txt"
+#   "$DATA_SAMPLES_DIR/tmp.txt"
+#   "$DATA_SAMPLES_DIR/large_text_eng.txt"
+#   "$DATA_SAMPLES_DIR/large_text_ru.txt"
+#   "$BUILD_DIR/compress"
+#   "$DATA_SAMPLES_DIR/black_and_white.png"
+#   "$DATA_SAMPLES_DIR/black_sun.png"
+#   "$DATA_SAMPLES_DIR/chess_black_and_white.png"
+#   "$DATA_SAMPLES_DIR/black_and_white_1.jpeg"
+#   "$DATA_SAMPLES_DIR/chees_board.jpeg"
+#   "$DATA_SAMPLES_DIR/voina-i-mir.epub"
+#   "$DATA_SAMPLES_DIR/pdf_test_2.PDF"
+#   "$DATA_SAMPLES_DIR/cringe.jpg"
+#   "$DATA_SAMPLES_DIR/fib.txt"
+#   "$DATA_SAMPLES_DIR/ncurses.txt"
+# )
+
+tests=$(find $DATA_SAMPLES_DIR/*)
 
 testing() {
   extern="$(echo $@ | grep -e "\.[A-z]*$" -o)"
@@ -78,8 +79,7 @@ testing() {
 
 gcc ../tests/print_compression_infographic.c -o ../tests/print_compression_infographic
 
-for i in "${tests[@]}"; do
-    var="-$var1"
+for i in $tests; do
     testing $i
 done
 
