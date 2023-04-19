@@ -2,9 +2,8 @@
 CC = gcc
 FLAGS = -Wall -Werror -Wextra -g
 OS:=$(shell uname -s)
-CCOV = -fprofile-arcs -ftest-coverage
 LIB_FILE = libs21_string.a
-HUFFMANS_DIR = ./Huffmans-algorithm
+HUFFMANS_DIR = ./Huffmans-algorithm/
 BUILD_DIR = ../build/
 
 # ifeq ($(OS), Darwin)
@@ -16,11 +15,10 @@ BUILD_DIR = ../build/
 
 
 all: huff.o
-	$(CC) huff.o decode.o encode.o main.c -o $(BUILD_DIR)/compress -lncurses
-	rm -rf *.o
+	$(CC) huff.o decode.o encode.o main.c -o $(BUILD_DIR)compress -lncurses
 
 huff.o:
-	$(CC)  -c $(HUFFMANS_DIR)/decode.c $(HUFFMANS_DIR)/encode.c $(HUFFMANS_DIR)/huff.c
+	$(CC)  -c $(HUFFMANS_DIR)decode.c $(HUFFMANS_DIR)encode.c $(HUFFMANS_DIR)huff.c
 
 clean:
 	rm -f *.o

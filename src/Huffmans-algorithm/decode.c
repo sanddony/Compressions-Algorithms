@@ -5,7 +5,7 @@ int Decode(files files) {
   size_t count_bytes = 0; 
   node **nodes_list = RestoreTree(files, &count_nodes, &count_bytes);
   if(count_bytes == 0){
-    sprintf(stderr, "Empty file!\n");
+    fprintf(stderr, "Empty file!\n");
     exit(0);
   }
   WriteDecodeFile(files, nodes_list, count_nodes, &count_bytes);

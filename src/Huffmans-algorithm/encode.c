@@ -43,7 +43,7 @@ node **GetFrequencyOfBytes(files files, int *sym_count) {
   //
 
   if(file_size == 0){
-    sprintf(stderr, "Empty file!\n");
+    fprintf(stderr, "Empty file!\n");
     exit(0);
   }
 
