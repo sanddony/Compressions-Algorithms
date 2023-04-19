@@ -6,6 +6,10 @@
 #include <string.h>
 
 
+#define byte unsigned char
+#define eight_bytes unsigned long long
+
+
 static struct option long_options[] = {{"algorithm", optional_argument, NULL, 'a'},
                                        {"encode", no_argument, NULL, 'e'},
                                        {"decode", no_argument, NULL, 'd'},

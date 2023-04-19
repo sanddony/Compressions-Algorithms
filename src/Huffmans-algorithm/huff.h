@@ -10,9 +10,6 @@
 #include "../header.h"
 
 
-#define byte unsigned char
-#define eight_bytes unsigned long long
-
 #define BYTE_MAX_SIZE 256
 #define BUFFSIZE 64
 
