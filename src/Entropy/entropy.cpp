@@ -1,89 +1,31 @@
-#include <iostream>
-#include <vector>
-#include <map>
-#include <cmath>
-#include <cstddef>
-#include <bitset>
+#include "entropy.h"
 
-using namespace std;
-
-struct sortByUnicode{
-
+template <typename T>
+Message<T>::Message(const vector<T>& msg): _message(msg), _messageSize(_message.size()) {
+    defineEnsemble();
+    definebigramEnsemble();
 };
 
-struct sortByFrequency{
-
-};
-
-
-class Message{
-private:
-    vector<byte>& _message;
-    int _messageSize;
-public:
-    Message(vector<byte>& msg): _message(msg), _messageSize(_message.size()){
-        defineEnsemble();
-    };
-    ~Message(){};
-
-    friend ostream& operator<<(ostream &os, const Message& msg);
-    friend istream& operator>>(istream &in, Message& msg);
-
-    map<byte, double> Ensemble;
-
-    void defineEnsemble();
-
-    vector<byte>& getMsgText();
-    double calculateUnconditionalEntropy();
-    int size();
-};  
-
-
-
-istream& operator>>(istream &in, vector<byte>& msg){ // didn't work
-    while (!in.eof())//0000110110
+template <typename T>
+Message<T>::Message(const string& msg): _messageSize(msg.size()){
+    // _message = *(new vector<byte>);
+    for (int i = 0; i < _messageSize; i++)
     {
-        msg.push_back(static_cast<byte>(in.get()));
+       _message.push_back(T(msg[i]));
+       cout << T(msg[i]) << ":" << msg[i] << endl;
     }
-    return in;
+    defineEnsemble();
+    definebigramEnsemble();
 }
 
-
-std::ostream& operator<<(std::ostream& os, std::byte b) {
-    return os << "["<< std::bitset<8>(std::to_integer<int>(b)) << "]";
-}
-
-ostream& operator<<(ostream &os, const vector<byte>& msg){
-    for (int i = 0; i < msg.size(); i++)
-    {
-        os  << msg[i] << " " << endl;
-    }
-    return os;
-}
-
-ostream& operator<<(ostream &os, const pair<byte,double>& symb){
-    return os << "[" << symb.first << "]=" << symb.second << endl;
-}
-
-ostream& operator<<(ostream &os, const map<byte,double>& ensemble){
-    for(auto elem: ensemble) {
-        os << elem;
-    }
-    return os;
-}
-
-ostream& operator<<(ostream &os, const Message& msg){
-    return os << msg._message << endl;
-}
-
-
-
-int Message::size(){
+template <typename T>
+int Message<T>::size(){
     return _messageSize;
 }
 
-void Message::defineEnsemble(){
-    for (int i = 0; i < _message.size(); i++)
+template <typename T>
+void Message<T>::defineEnsemble(){
+    for (int i = 0; i < _messageSize; i++)
     {
         Ensemble[_message[i]]++;
     }
@@ -94,35 +36,120 @@ void Message::defineEnsemble(){
     }
 }
 
-double Message::calculateUnconditionalEntropy(){
-    //-sum(1->m)P(x_i)*log_2 P(x_i)
+template <typename T>
+void Message<T>::definebigramEnsemble(){
+    for (int i = 0; i < _messageSize-1; i++)
+    {
+        bigramEnsemble[array<byte,2>{_message[i],_message[i+1]}]++;
+    }
+
+    for (map<array<byte,2>,double>::iterator it = bigramEnsemble.begin(); it != bigramEnsemble.end(); it++)
+    {
+        it->second /= (_messageSize-1);
+    }
+    
+    for (auto firstElem: Ensemble)
+    {
+        for (auto secondElem: Ensemble)
+        {
+            bigramEnsemble[array<byte,2>{firstElem.first,secondElem.first}];
+        }
+    }
+    
+    
+    
+    
+}
+
+template <typename T>
+double Message<T>::calculateUnconditionalEntropy(amountBy& logBy){
+    //H(X)=-sum(1->m)P(x_i)*log_2 P(x_i)
     double result = 0;
     for (map<byte,double>::iterator it = Ensemble.begin(); it != Ensemble.end(); it++){
-        result+=(it->second * log2(it->second));
+        result+=(it->second * logBy(it->second));
     }
     return -result;
 }
 
-vector<byte>& Message::getMsgText(){
+template <typename T>
+double Message<T>::calculateMaximumEntropy(amountBy& logBy){
+    //H_max = log_2 m
+    return logBy(Ensemble.size());
+}
+
+template <typename T>
+double Message<T>::calculatefUnderloadedAlphabet(amountBy& logBy){
+    // H_max - H(x)
+    return calculateMaximumEntropy(logBy) - calculateUnconditionalEntropy(logBy);
+}
+
+template <typename T>
+double Message<T>::calculateAmountOfOwnInformationy(const T& symb, amountBy& logBy){
+    return -logBy(Ensemble[symb]);
+}
+
+template <typename T>
+double Message<T>::calculateAmountOfOwnInformationy(amountBy& logBy){
+    double result = 0;
+    for (auto symb: Ensemble)
+    {
+        result += calculateAmountOfOwnInformationy(symb.first, logBy);
+    }
+    return result;
+}
+
+template <typename T>
+double Message<T>::calculateFirstOrderEntropy(amountBy& logBy){
+    double result = 0;
+    map<array<byte,2>,double>::iterator it = bigramEnsemble.begin();
+    for (auto symb: Ensemble)
+    {
+        double tmp_sum = 0;
+        while (it->first[0] == symb.first)
+        {
+            tmp_sum += it->second * logBy(it->second);
+            it++;
+        }
+        result -= symb.second * tmp_sum;
+    }
+    
+    return result;
+}
+
+template <typename T>
+vector<T>& Message<T>::getMsgData(){
     return this->_message;
 }
 
 
 int main(){
-    vector<byte> x;
-    x.push_back(byte{0b11110001});
-    x.push_back(byte{0b11110001});
-    x.push_back(byte{0b11110100});
-    x.push_back(byte{0b11110001});
-    x.push_back(byte{0b11110100});
-    x.push_back(byte{0b11110111});
-    cout << x;
-    Message msg(x);
-    cout << msg.calculateUnconditionalEntropy() << endl;
+    //1/2 = 3/6
+    //1/3 = 2/6
+    //1/6
+    //
+    // vector<byte> x;
+    // x.push_back(byte{0b11110001});
+    // x.push_back(byte{0b11110001});
+    // x.push_back(byte{0b11110100});
+    // x.push_back(byte{0b11110001});
+    // x.push_back(byte{0b11110100});
+    // x.push_back(byte{0b11110111});
+    // // cout << x;                                                                            
+    Message<string> msg("123");
+    cout << msg;
+    // byBits bb;
+    // byDits bd;
+    // byNats bn;
+    //ааааааааббб
+    // cout << msg.calculateUnconditionalEntropy(bd) << endl;
     // cout << msg.Ensemble << endl;
-    // cout << msg.Ensemble << endl;
+    // cout << msg.bigramEnsemble << endl;
+    setlocale(LC_ALL,". 1251");
+    string t = "р";
+    cout << t << endl;
+    // cout << msg << endl;
     // cout << msg.Ensemble[static_cast<byte>(3)] << endl;
-    // cout << msg.getMsgText() << endl;
+    // cout << msg.getMsgData() << endl;
 
 
 
