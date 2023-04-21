@@ -27,6 +27,11 @@ struct byNats: amountBy{
     double operator()(double) override;
 };
 
+enum encode{
+    ANSII,
+    UTF_8
+};
+
 template <typename T=byte>
 class Message{
 protected:
@@ -38,8 +43,8 @@ public:
 
     vector<T>& getMsgData();
 
-    friend ostream& operator<<(ostream &os, const Message& msg);
-    friend istream& operator>>(istream &in, Message& msg);
+    friend ostream& operator<<(ostream &os, const Message<T>& msg);
+    friend istream& operator>>(istream &in, Message<T>& msg);
     
     map<T, double> Ensemble;
     map<array<T,2>,double> bigramEnsemble;
@@ -65,13 +70,17 @@ public:
 
 ostream& operator<<(ostream& os, const byte b);
 
-ostream& operator<<(ostream &os, const vector<byte>& msg);
+template <typename T>
+ostream& operator<<(ostream &os, const vector<T>& msg);
 
-ostream& operator<<(ostream &os, const pair<byte,double>& symb);
+template <typename T>
+ostream& operator<<(ostream &os, const pair<T,double>& symb);
 
-ostream& operator<<(ostream &os, const map<byte,double>& ensemble);
+template <typename T>
+ostream& operator<<(ostream &os, const map<T,double>& ensemble);
 
-ostream& operator<<(ostream &os, const map<array<byte,2>,double>& ensemble);
+template <typename T>
+ostream& operator<<(ostream &os, const map<array<T,2>,double>& ensemble);
 
 template <typename T>
 ostream& operator<<(ostream &os, const Message<T>& msg);

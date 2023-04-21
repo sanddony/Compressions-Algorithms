@@ -5,7 +5,7 @@ OS:=$(shell uname -s)
 CCOV = -fprofile-arcs -ftest-coverage
 LIB_FILE = libs21_string.a
 HUFFMANS_DIR = ./Huffmans-algorithm
-BUILD_DIR = ../build/
+BUILD_DIR = ../build
 DATA_SAMPLES_DIR=../data-samples
 
 
@@ -28,8 +28,8 @@ clean:
 	rm -f *.o
 	rm -f $(BUILD_DIR)/compress
 	rm -f ../tests/print_compression_infographic
-	rm -f $(DATA_SAMPLES_DIR)/*_encode*
-	rm -f $(DATA_SAMPLES_DIR)/*_decode*
+	rm -f $(DATA_SAMPLES_DIR)/*encode*
+	rm -f $(DATA_SAMPLES_DIR)/*decode*
 
 clean_o:
 	rm -rf ../*.o

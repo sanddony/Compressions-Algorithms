@@ -12,11 +12,21 @@ Message<T>::Message(const string& msg): _messageSize(msg.size()){
     for (int i = 0; i < _messageSize; i++)
     {
        _message.push_back(T(msg[i]));
-       cout << T(msg[i]) << ":" << msg[i] << endl;
     }
     defineEnsemble();
     definebigramEnsemble();
 }
+
+// Message<wchar_t>::Message(const string& msg): _messageSize(msg.size()){
+//     // _message = *(new vector<byte>);
+//     for (int i = 0; i < _messageSize; i++)
+//     {
+//        _message.push_back(T(msg[i]));
+//        cout << T(msg[i]) << ":" << msg[i] << endl;
+//     }
+//     defineEnsemble();
+//     definebigramEnsemble();
+// }
 
 template <typename T>
 int Message<T>::size(){
@@ -30,7 +40,7 @@ void Message<T>::defineEnsemble(){
         Ensemble[_message[i]]++;
     }
 
-    for (map<byte,double>::iterator it = Ensemble.begin(); it != Ensemble.end(); it++)
+    for (auto it = Ensemble.begin(); it != Ensemble.end(); it++)
     {
         it->second /= _messageSize;
     }
@@ -40,10 +50,10 @@ template <typename T>
 void Message<T>::definebigramEnsemble(){
     for (int i = 0; i < _messageSize-1; i++)
     {
-        bigramEnsemble[array<byte,2>{_message[i],_message[i+1]}]++;
+        bigramEnsemble[array<T,2>{_message[i],_message[i+1]}]++;
     }
 
-    for (map<array<byte,2>,double>::iterator it = bigramEnsemble.begin(); it != bigramEnsemble.end(); it++)
+    for (auto it = bigramEnsemble.begin(); it != bigramEnsemble.end(); it++)
     {
         it->second /= (_messageSize-1);
     }
@@ -52,7 +62,7 @@ void Message<T>::definebigramEnsemble(){
     {
         for (auto secondElem: Ensemble)
         {
-            bigramEnsemble[array<byte,2>{firstElem.first,secondElem.first}];
+            bigramEnsemble[array<T,2>{firstElem.first,secondElem.first}];
         }
     }
     
@@ -65,7 +75,7 @@ template <typename T>
 double Message<T>::calculateUnconditionalEntropy(amountBy& logBy){
     //H(X)=-sum(1->m)P(x_i)*log_2 P(x_i)
     double result = 0;
-    for (map<byte,double>::iterator it = Ensemble.begin(); it != Ensemble.end(); it++){
+    for (auto it = Ensemble.begin(); it != Ensemble.end(); it++){
         result+=(it->second * logBy(it->second));
     }
     return -result;
@@ -101,7 +111,7 @@ double Message<T>::calculateAmountOfOwnInformationy(amountBy& logBy){
 template <typename T>
 double Message<T>::calculateFirstOrderEntropy(amountBy& logBy){
     double result = 0;
-    map<array<byte,2>,double>::iterator it = bigramEnsemble.begin();
+    auto it = bigramEnsemble.begin();
     for (auto symb: Ensemble)
     {
         double tmp_sum = 0;
@@ -134,9 +144,21 @@ int main(){
     // x.push_back(byte{0b11110001});
     // x.push_back(byte{0b11110100});
     // x.push_back(byte{0b11110111});
-    // // cout << x;                                                                            
-    Message<string> msg("123");
-    cout << msg;
+    // // cout << x;
+    // setlocale(LC_ALL, "");                                                                            
+    // Message<wchar_t> msg("блять");
+    // cout << 'a';
+    // wcout.imbue(locale("rus_rus.866"));
+    // wcout << msg.getMsgData()[0];
+    // wcout << msg.getMsgData()[1];
+    // wcout << msg.getMsgData()[2];
+
+
+    string x = "бdлять";
+    cout << (int)x[0] << (int)x[1] << (int)x[2] << endl;
+
+    string u = "blyat";
+    cout << (int)u[0] << ' ' << (int)u[1] << ' ' << (int)u[2] << endl;
     // byBits bb;
     // byDits bd;
     // byNats bn;
@@ -144,9 +166,9 @@ int main(){
     // cout << msg.calculateUnconditionalEntropy(bd) << endl;
     // cout << msg.Ensemble << endl;
     // cout << msg.bigramEnsemble << endl;
-    setlocale(LC_ALL,". 1251");
-    string t = "р";
-    cout << t << endl;
+    // setlocale(LC_ALL,". 1251");
+    // wchar_t t = 'е';
+    // cout << t << endl;
     // cout << msg << endl;
     // cout << msg.Ensemble[static_cast<byte>(3)] << endl;
     // cout << msg.getMsgData() << endl;
