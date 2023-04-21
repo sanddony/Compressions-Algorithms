@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include <array>
 #include <map>
 #include <cmath>
@@ -32,22 +33,23 @@ enum encode{
     UTF_8
 };
 
-template <typename T=byte>
+
 class Message{
 protected:
-    vector<T> _message;
+    vector<vector<byte>> _message;
     int _messageSize = 0;
 public:
-    Message(const vector<T>& msg);
+    Message(const vector<byte>& msg);
     Message(const string& msg);
+    Message(const char[]);
 
-    vector<T>& getMsgData();
+    vector<vector<byte>>& getMsgData();
 
-    friend ostream& operator<<(ostream &os, const Message<T>& msg);
-    friend istream& operator>>(istream &in, Message<T>& msg);
+    friend ostream& operator<<(ostream &os, const Message& msg);
+    friend istream& operator>>(istream &in, Message& msg);
     
-    map<T, double> Ensemble;
-    map<array<T,2>,double> bigramEnsemble;
+    map<vector<byte>, double> Ensemble;
+    map<array<vector<byte>,2>,double> bigramEnsemble;
     void definebigramEnsemble();
     void defineEnsemble();
     int size();
@@ -57,7 +59,7 @@ public:
     //максимальная энтропия
     double calculateMaximumEntropy(amountBy&);
     //собственное количество информации в конкретном символе
-    double calculateAmountOfOwnInformationy(const T&, amountBy&);
+    double calculateAmountOfOwnInformationy(const vector<byte>&, amountBy&);
     //собственное количество информации в сообщении
     double calculateAmountOfOwnInformationy(amountBy&);
     //пережгруженность сообщения
@@ -70,20 +72,17 @@ public:
 
 ostream& operator<<(ostream& os, const byte b);
 
-template <typename T>
-ostream& operator<<(ostream &os, const vector<T>& msg);
+ostream& operator<<(ostream &os, const vector<byte>& msg);
 
-template <typename T>
-ostream& operator<<(ostream &os, const pair<T,double>& symb);
+ostream& operator<<(ostream &os, const vector<vector<byte>>& msg);
 
-template <typename T>
-ostream& operator<<(ostream &os, const map<T,double>& ensemble);
+ostream& operator<<(ostream &os, const pair<vector<byte>,double>& symb);
 
-template <typename T>
-ostream& operator<<(ostream &os, const map<array<T,2>,double>& ensemble);
+ostream& operator<<(ostream &os, const map<vector<byte>,double>& ensemble);
 
-template <typename T>
-ostream& operator<<(ostream &os, const Message<T>& msg);
+ostream& operator<<(ostream &os, const map<array<vector<byte>,2>,double>& ensemble);
+
+ostream& operator<<(ostream &os, const Message& msg);
 
 
 #endif // SRC_ENTROPY
