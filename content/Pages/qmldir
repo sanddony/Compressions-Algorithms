@@ -1,0 +1,5 @@
+Module Pages
+FileInputPage 1.0 FileInputPage.qml
+MessagePage 1.0 MessagePage.qml
+BasePage 1.0 BasePage.qml
+ByteOperationPage 1.0 ByteOperationPage.qml

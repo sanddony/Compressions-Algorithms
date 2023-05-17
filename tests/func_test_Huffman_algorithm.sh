@@ -6,7 +6,7 @@ COUNTER=0
 
 DELETE_MODE=$1
 
-BUILD_DIR="../build"
+BUILD_DIR="../src"
 DATA_SAMPLES_DIR="../data-samples"
 RESULTS_DIR="../data-samples/results"
 ALGORITHM="-a huff"
