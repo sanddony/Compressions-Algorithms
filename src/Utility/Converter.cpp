@@ -102,7 +102,7 @@ std::vector<std::byte> Converter::ToVectorOfByte(int value)
     int mask = 0xFF000000;
     std::vector<std::byte> result;
     for (int idx = 0; idx < INT_BYTE_COUNT; ++idx) {
-        result.push_back(std::byte{value & mask});
+        result.push_back(std::byte(value & mask));
         mask >>=8;
     }
     return result;

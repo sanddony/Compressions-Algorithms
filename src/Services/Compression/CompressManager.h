@@ -1,7 +1,7 @@
 #ifndef COMPRESSMANAGER_H
 #define COMPRESSMANAGER_H
 
-#include <bits/types/FILE.h>
+// #include <bits/types/FILE.h>
 #include <string>
 #include <vector>
 #include <map>
